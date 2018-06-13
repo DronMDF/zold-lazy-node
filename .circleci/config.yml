@@ -5,6 +5,7 @@ jobs:
       - image: circleci/python:3.6.1
     steps:
       - checkout
-      - run: |
-        pip install -r requirements.txt
-        pytest -v
+      - run:
+        command: |
+          pip install -r requirements.txt
+          pytest -v
