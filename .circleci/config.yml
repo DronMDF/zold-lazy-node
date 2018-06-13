@@ -19,4 +19,6 @@ jobs:
       - run:
           command: |
             . venv/bin/activate
-            pytest -v
+            # @todo #1 Включить юниттестирование (когда появится первый код)
+            # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
+            # pytest -v
