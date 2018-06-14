@@ -6,15 +6,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          key: deps-{{ checksum "requirements.txt" }}
       - run:
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
       - save_cache:
-          # @todo #2 Share cache over bransh
-          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          key: deps-{{ checksum "requirements.txt" }}
           paths:
             - "venv"
       - run:
@@ -22,5 +21,7 @@ jobs:
             # @todo #1 Включить юниттестирование (когда появится первый код)
             # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
             . venv/bin/activate
+            # @todo #12 Использовать pylintn для контроля стиля
+            # @todo #12 Использовать pdd для контроля паззлов
             pycodestyle . --exclude=./venv/* --ignore=W191
             # pytest -v
