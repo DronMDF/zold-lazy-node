@@ -13,6 +13,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
       - save_cache:
+          # @todo #2 Share cache over bransh
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
           paths:
             - "venv"
