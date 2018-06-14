@@ -21,4 +21,5 @@ jobs:
             # @todo #1 Включить юниттестирование (когда появится первый код)
             # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
             . venv/bin/activate
+            pycodestyle . --ignore=W191
             # pytest -v
