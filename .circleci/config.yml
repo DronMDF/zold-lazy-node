@@ -21,7 +21,7 @@ jobs:
             # @todo #1 Включить юниттестирование (когда появится первый код)
             # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
             . venv/bin/activate
-            # @todo #12 Использовать pylintn для контроля стиля
             # @todo #12 Использовать pdd для контроля паззлов
             pycodestyle . --exclude=./venv/* --ignore=W191
+            pylint *.py
             # pytest -v
