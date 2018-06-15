@@ -15,7 +15,7 @@ def api_root():
             "invoice": "THdonv1E@0000000000000000",
             "suffixes": ["4f9c38", "49c074", "24829a"],
             "strength": 6
-       }
+        }
     }
 
     resp = jsonify(data)
