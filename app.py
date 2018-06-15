@@ -25,5 +25,23 @@ def api_root():
     return resp
 
 
+@app.route('/remotes', methods=['GET'])
+def api_remotes():
+    data = {
+        "version": "0.13.5",
+        "all": [
+            {"host": "b2.zold.io", "port": 4096, "score": 0},
+            {"host": "b1.zold.io" , "port": 80, "score": 0}
+        ]
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+    resp.headers['X-Zold-Version'] = '0.0.0'
+
+    return resp
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
