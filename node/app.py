@@ -52,5 +52,16 @@ def api_remotes():
 	return resp
 
 
+@APP.route('/wallet/<w_id>', methods=['GET'])
+def api_get_wallet(w_id):
+    data = {}
+
+    resp = jsonify(data)
+    resp.status_code = 404
+    resp.headers['X-Zold-Version'] = '0.0.0'
+
+    return resp
+
+
 if __name__ == '__main__':
 	APP.run(debug=True, host='0.0.0.0', port=5000)
