@@ -18,9 +18,11 @@ jobs:
             - "venv"
       - run:
           command: |
-            # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
             . venv/bin/activate
+            pycodestyle node node.test --ignore=W191
+            pylint node node.test
             # @todo #12 Использовать pdd для контроля паззлов
-            pycodestyle . --exclude=./venv/* --ignore=W191
-            find node node.test -name *.py | xargs pylint
+            # @todo #9 Использовать radon для контроля цикломатической сложности и уровня
+            #  поддерживаемости.
+            # @todo #1 Включить оценку покрытия (coverage, когда появятся тесты)
             pytest -v
