@@ -31,7 +31,7 @@ def api_remotes():
         "version": "0.13.5",
         "all": [
             {"host": "b2.zold.io", "port": 4096, "score": 0},
-            {"host": "b1.zold.io" , "port": 80, "score": 0}
+            {"host": "b1.zold.io", "port": 80, "score": 0}
         ]
     }
 
@@ -40,7 +40,6 @@ def api_remotes():
     resp.headers['X-Zold-Version'] = '0.0.0'
 
     return resp
-
 
 
 if __name__ == '__main__':
