@@ -7,9 +7,9 @@ app = Flask(__name__)
 def api_root():
     data = {
         "version": "0.6.1",
-        "score":{
+        "score": {
             "value": 3,
-            "time":  "2017-07-19T21:24:51Z",
+            "time": "2017-07-19T21:24:51Z",
             "host": "b2.zold.io",
             "port": 4096,
             "invoice": "THdonv1E@0000000000000000",
@@ -20,7 +20,7 @@ def api_root():
 
     resp = jsonify(data)
     resp.status_code = 200
-    resp.headers['X-Zold-Version'] = '0.0.0' 
+    resp.headers['X-Zold-Version'] = '0.0.0'
 
     return resp
 
