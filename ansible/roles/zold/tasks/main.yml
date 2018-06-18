@@ -1,0 +1,23 @@
+---
+- name: Install pip3
+  apt:
+    name: python3-pip
+    state: present
+    force: yes
+- name: Copy zold requirements file
+  copy:
+    src: "{{playbook_dir}}/../requirements.txt"
+    dest: "{{project_dir}}/"
+# @todo #16 Список модулей requirements слишком велик для продакшина
+#  содержит модули для тестирования
+- pip:
+    requirements: "{{project_dir}}/requirements.txt"
+    executable: pip3
+- name: Copy zold sources
+  copy:
+    src: "{{playbook_dir}}/../node"
+    dest: "{{project_dir}}/"
+    mode: u=rw,g=r,o=r
+# @todo #16 Для продакшина необходима конфигурация.
+#- name: Copy zold settings
+#  template: "src=roles/zold/templates/config.j2 dest={{project_dir}}/{{project_name}}/zold/config.py"

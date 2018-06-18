@@ -1,0 +1,13 @@
+---
+- name: Install gunicorn package
+  pip:
+    name: gunicorn
+    executable: pip3
+- name: install gunisorn service
+  copy:
+    src: gunicorn.service
+    dest: /etc/systemd/system/gunicorn.service
+- name: Restart uwsgi service
+  service:
+    name: gunicorn
+    state: restarted
