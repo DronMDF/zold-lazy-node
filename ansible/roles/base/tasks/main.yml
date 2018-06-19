@@ -40,4 +40,15 @@
     policy: DROP
 - name: Save ruleset
   shell: iptables-save > /etc/iptables.rules
+- name: Create group
+  group:
+    name: zold
+    state: present
+- name: Create user
+  user:
+    name: zold
+    shell: /bin/false
+    groups: zold,www-data
+    home: "{{project_dir}}"
+    state: present
 -

@@ -22,7 +22,8 @@
     path: "{{project_dir}}/logs"
     state: directory
 - name: Restart nginx
-  service:
+  systemd:
     name: nginx
+    enabled: yes
     state: restarted
 

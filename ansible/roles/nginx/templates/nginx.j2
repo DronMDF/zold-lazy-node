@@ -8,6 +8,6 @@ server {
 	error_log error.log;
 	location / {
 		include proxy_params;
-		proxy_pass http://unix:/var/run/{{project_name}}.sock;
+		proxy_pass http://unix:/run/gunicorn/socket;
 	}
 }

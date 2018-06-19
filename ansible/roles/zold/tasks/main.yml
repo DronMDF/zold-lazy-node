@@ -21,3 +21,10 @@
 # @todo #16 Для продакшина необходима конфигурация.
 #- name: Copy zold settings
 #  template: "src=roles/zold/templates/config.j2 dest={{project_dir}}/{{project_name}}/zold/config.py"
+- name: Project dir permission
+  file:
+    path: "{{project_dir}}"
+    owner: zold
+    group: zold
+    recurse: yes
+    mode: u=rwx,g=rwx,o=rx
