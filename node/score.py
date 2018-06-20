@@ -20,3 +20,7 @@ class JsonScore:
 			self.data['invoice'],
 			' '.join(self.data['suffixes'])
 		))
+
+	def valid(self):
+		# @todo #29 прикрутить проверку через хеширование
+		return True
