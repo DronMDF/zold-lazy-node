@@ -6,22 +6,41 @@
 
 ''' Score '''
 
+import hashlib
+from functools import reduce
+
 
 class JsonScore:
 	''' Этот Score конструируется из json '''
 	def __init__(self, json):
 		self.data = json
 
-	def __str__(self):
+	def prefix(self):
+		''' Префиксная часть Score '''
 		return ' '.join((
 			self.data['time'],
 			self.data['host'],
 			str(self.data['port']),
-			self.data['invoice'],
-			' '.join(self.data['suffixes'])
+			self.data['invoice']
 		))
+
+	def __str__(self):
+		return ' '.join([self.prefix()] + self.data['suffixes'])
+
+	def sha256(self, data):
+		''' Рассчет sha256 для строки '''
+		hstr = hashlib.sha256(data.encode('ascii')).hexdigest()
+		if not hstr.endswith('0' * 6):
+			raise RuntimeError('WrongHash')
+		return hstr
 
 	def valid(self):
 		''' Проверка валидности Score '''
-		# @todo #29 прикрутить проверку через хеширование, если суффиксы есть.
+		try:
+			reduce(
+				lambda p, s: self.sha256(p + ' ' + s),
+				[self.prefix()] + self.data['suffixes']
+			)
+		except Exception:
+			return False
 		return True

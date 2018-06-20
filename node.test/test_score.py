@@ -35,3 +35,14 @@ class TestJsonScore:
 			'suffixes': ['1e2434e', 'de5407', '14d43e4', '30a7d', '11afbbf', '4cd950']
 		})
 		assert score.valid()
+
+	def test_valid_empty(self):
+		''' Проверяем, что JsonScore Без суффиксов тоже валиден '''
+		score = JsonScore({
+			'host': '185.180.196.2',
+			'port': 4096,
+			'invoice': '2X8kfnzk@9a856dac7d475014',
+			'time': '2018-06-19T14:17:22Z',
+			'suffixes': []
+		})
+		assert score.valid()
