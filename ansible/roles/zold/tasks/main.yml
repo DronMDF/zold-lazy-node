@@ -10,7 +10,8 @@
     dest: "{{project_dir}}/"
 # @todo #16 Список модулей requirements слишком велик для продакшина
 #  содержит модули для тестирования
-- pip:
+- name: Install zold requirements
+  pip:
     requirements: "{{project_dir}}/requirements.txt"
     executable: pip3
 - name: Copy zold sources
