@@ -1,0 +1,12 @@
+---
+- hosts: zold
+  vars:
+    project_name: zold
+    project_dir: /usr/share/{{project_name}}
+  vars_files:
+    - /etc/ansible/{{project_name}}.yml
+  roles:
+    - base
+    - zold
+    - gunicorn
+    - nginx
