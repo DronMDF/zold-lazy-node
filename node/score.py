@@ -4,43 +4,20 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
-''' Score '''
 
-import hashlib
-from functools import reduce
+''' Score из БД'''
+from zold.score import JsonScore
 
 
-class JsonScore:
-	''' Этот Score конструируется из json '''
-	def __init__(self, json):
-		self.data = json
-
-	def prefix(self):
-		''' Префиксная часть Score '''
-		return ' '.join((
-			self.data['time'],
-			self.data['host'],
-			str(self.data['port']),
-			self.data['invoice']
-		))
-
-	def __str__(self):
-		return ' '.join([self.prefix()] + self.data['suffixes'])
-
-	def sha256(self, data):
-		''' Рассчет sha256 для строки '''
-		hstr = hashlib.sha256(data.encode('ascii')).hexdigest()
-		if not hstr.endswith('0' * 6):
-			raise RuntimeError('WrongHash')
-		return hstr
-
-	def valid(self):
-		''' Проверка валидности Score '''
-		try:
-			reduce(
-				lambda p, s: self.sha256(p + ' ' + s),
-				[self.prefix()] + self.data['suffixes']
-			)
-		except Exception:
-			return False
-		return True
+class DbScores:
+	''' Список всех Score из БД '''
+	def __iter__(self):
+		# @todo #29 Вычитать из БД все имеющиеся score
+		#  А пока это заглушка, которую необходимо потом убрать
+		yield JsonScore({
+			"host": "178.128.169.239",
+			"port": 4096,
+			"invoice": "Rg3XJle8@48b368ce23ed97fe",
+			"time": "2018-06-20T20:01:32Z",
+			"suffixes": []
+		})
