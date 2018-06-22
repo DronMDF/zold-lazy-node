@@ -1,4 +1,6 @@
+base58
 Flask
 pycodestyle
 pylint
 pytest
+requests
