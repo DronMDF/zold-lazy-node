@@ -4,8 +4,12 @@
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
 
+# pylint: disable=no-member
+
 ''' Модель данных (схема БД) '''
+
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 DB = SQLAlchemy()
 
@@ -26,3 +30,7 @@ class Suffix(DB.Model):
 	value = DB.Column(DB.String(32))
 	time = DB.Column(DB.DateTime)
 	score_id = DB.Column(DB.Integer, DB.ForeignKey('score.id'))
+
+	def __init__(self, value):
+		self.value = value
+		self.time = datetime.now()

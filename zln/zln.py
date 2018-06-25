@@ -48,7 +48,7 @@ def main(argv):
 			suffix,
 			(end_time - start_time).total_seconds()
 		))
-		requests.post(url + '/score', {'suffix': suffix})
+		requests.post(url + '/score', json={'suffix': suffix})
 
 
 main(sys.argv)

@@ -7,6 +7,7 @@
 
 ''' Score из БД'''
 from zold.score import JsonScore
+from node.db import DB, Suffix
 
 
 class DbScores:
@@ -22,5 +23,7 @@ class DbScores:
 			"suffixes": []
 		})
 
-	def newSuffix(self, suffix):
+	def new_suffix(self, suffix):
 		''' Добавляем новый суффикс в БД '''
+		DB.session.add(Suffix(suffix))
+		DB.session.commit()

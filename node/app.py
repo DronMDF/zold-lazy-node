@@ -8,12 +8,16 @@
 
 from datetime import datetime
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
 from zold.score import StrongestScore
 from node.score import DbScores
 from node.db import DB
 
 APP = Flask(__name__)
+APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+DB.init_app(APP)
+with APP.app_context():
+	DB.create_all()
 
 
 @APP.route('/', methods=['GET'])
@@ -49,14 +53,15 @@ def api_root():
 
 @APP.route('/score', methods=['POST'])
 def api_score():
+	''' Загрузка суффиксов на сервер '''
 	try:
-		suffix = request.json.get('score')
-		DbScores.newSuffix(suffix)
+		suffix = request.json.get('suffix')
+		DbScores().new_suffix(suffix)
 		resp = jsonify({})
 		resp.status_code = 200
 		resp.headers['X-Zold-Version'] = '0.0.0'
 		return resp
-	except Exception:
+	except Exception as e:
 		resp = jsonify({})
 		resp.status_code = 400
 		resp.headers['X-Zold-Version'] = '0.0.0'
@@ -99,6 +104,4 @@ def api_get_wallet():
 
 
 if __name__ == '__main__':
-	APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-	DB.init_app(APP)
 	APP.run(debug=True, host='0.0.0.0', port=5000)
