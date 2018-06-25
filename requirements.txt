@@ -1,5 +1,6 @@
 base58
 Flask
+Flask-SQLAlchemy
 pycodestyle
 pylint
 pytest

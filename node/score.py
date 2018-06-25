@@ -21,3 +21,6 @@ class DbScores:
 			"time": "2018-06-20T20:01:32Z",
 			"suffixes": []
 		})
+
+	def newSuffix(self, suffix):
+		''' Добавляем новый суффикс в БД '''
