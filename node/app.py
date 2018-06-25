@@ -61,7 +61,7 @@ def api_score():
 		resp.status_code = 200
 		resp.headers['X-Zold-Version'] = '0.0.0'
 		return resp
-	except Exception as e:
+	except Exception:
 		resp = jsonify({})
 		resp.status_code = 400
 		resp.headers['X-Zold-Version'] = '0.0.0'
