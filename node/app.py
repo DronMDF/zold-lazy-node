@@ -7,11 +7,17 @@
 ''' WEB интерфейс узла '''
 
 from datetime import datetime
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from zold.score import StrongestScore
 from node.score import DbScores
+from node.db import DB
 
 APP = Flask(__name__)
+APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+DB.init_app(APP)
+with APP.app_context():
+	DB.create_all()
 
 
 @APP.route('/', methods=['GET'])
@@ -43,6 +49,23 @@ def api_root():
 	resp.headers['X-Zold-Version'] = '0.0.0'
 
 	return resp
+
+
+@APP.route('/score', methods=['POST'])
+def api_score():
+	''' Загрузка суффиксов на сервер '''
+	try:
+		suffix = request.json.get('suffix')
+		DbScores().new_suffix(suffix)
+		resp = jsonify({})
+		resp.status_code = 200
+		resp.headers['X-Zold-Version'] = '0.0.0'
+		return resp
+	except Exception:
+		resp = jsonify({})
+		resp.status_code = 400
+		resp.headers['X-Zold-Version'] = '0.0.0'
+		return resp
 
 
 @APP.route('/remotes', methods=['GET'])
