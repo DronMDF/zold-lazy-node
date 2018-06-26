@@ -103,5 +103,19 @@ def api_get_wallet():
 	return resp
 
 
+@APP.route('/wallet/<w_id>', methods=['PUT'])
+def api_put_wallet():
+	''' Обновление содержимого кошелька '''
+	# @todo #7 Необходимо проверять содержимое запроса и 
+	#  сверять с содержимым кошелька.
+	data = {}
+
+	resp = jsonify(data)
+	resp.status_code = 400
+	resp.headers['X-Zold-Version'] = '0.0.0'
+
+	return resp
+
+
 if __name__ == '__main__':
 	APP.run(debug=True, host='0.0.0.0', port=5000)
