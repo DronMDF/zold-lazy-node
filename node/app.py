@@ -6,9 +6,8 @@
 
 ''' WEB интерфейс узла '''
 
-from datetime import datetime
 from flask import Flask, jsonify, request
-from zold.score import StrongestScore
+from zold.score import StrongestScore, ScoreHash
 from node.score import DbScores, AtLeastOneDbScores
 from node.db import DB
 
@@ -23,9 +22,6 @@ with APP.app_context():
 @APP.route('/', methods=['GET'])
 def api_root():
 	''' Статус ноды '''
-	# @todo #3 В этом json необходимо пробросить информацию для майнинга.
-	#  Информация для майнинга будет выглядеть как одна строка
-	#  (либо голый score, либо hash). Назовем это поле 'mining'
 	# @todo #3 version и X-Zold-Version, должны содержать текущую версию zold.
 	#  Но хранить ее где-то будет не очень удобно.
 	#  Предлагаю использовать версию, которую выдают соседние сервера.
@@ -35,11 +31,8 @@ def api_root():
 		'version': '0.6.1',
 		'score': StrongestScore(AtLeastOneDbScores(DbScores())).json(),
 		'farm': {
-			# @todo #36 Список current должен содержать базовые хеши
-			#  по всем актуальным Score для дальнейшего рассчета.
-			#  Пока заглушка.
 			'current': [
-				datetime.now().isoformat()
+				str(ScoreHash(s)) for s in DbScores()
 			]
 		}
 	}

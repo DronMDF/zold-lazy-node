@@ -57,6 +57,16 @@ class JsonScore:
 		return True
 
 
+class StrongestScore:
+	''' Самый мощный score из списка '''
+	def __init__(self, scores):
+		self.scores = scores
+
+	def json(self):
+		''' В виде json '''
+		return max(self.scores, key=lambda s: ScoreValue(s).value()).json()
+
+
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
 	def __init__(self, score):
@@ -74,11 +84,16 @@ class ScoreValue:
 		return value
 
 
-class StrongestScore:
-	''' Самый мощный score из списка '''
-	def __init__(self, scores):
-		self.scores = scores
+class ScoreHash:
+	''' Последний хеш Score. Если суффиксов нет, то возвращается префикс '''
+	def __init__(self, score, strongest=6):
+		self.score = score
+		self.strongest = strongest
 
-	def json(self):
-		''' В виде json '''
-		return max(self.scores, key=lambda s: ScoreValue(s).value()).json()
+	def __str__(self):
+		prefix = self.score.prefix()
+		for suffix in self.score.suffixes():
+			prefix = hashlib.sha256((prefix + ' ' + suffix).encode('ascii')).hexdigest()
+			if not prefix.endswith('0' * self.strongest):
+				raise RuntimeError("Невалидный Score")
+		return prefix

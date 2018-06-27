@@ -6,7 +6,7 @@
 
 ''' Score '''
 
-from zold.score import JsonScore, ScoreValue, StrongestScore
+from zold.score import JsonScore, StrongestScore, ScoreValue, ScoreHash
 
 
 class TestJsonScore:
@@ -71,3 +71,31 @@ class TestStrongestScore:
 	def test_json(self):
 		score = StrongestScore([JsonScore(self.EMPTY), JsonScore(self.STRONGEST)])
 		assert score.json()['invoice'] == '2X8kfnzk@9a856dac7d475014'
+
+
+class TestScoreHash:
+	FULL = {
+		'host': '185.180.196.2',
+		'port': 4096,
+		'invoice': '2X8kfnzk@9a856dac7d475014',
+		'time': '2018-06-19T14:17:22Z',
+		'suffixes': ['1e2434e', 'de5407', '14d43e4', '30a7d', '11afbbf', '4cd950']
+	}
+
+	EMPTY = {
+		'host': '178.128.169.239',
+		'port': 4096,
+		'invoice': 'Rg3XJle8@48b368ce23ed97fe',
+		'time': '2018-06-20T20:01:32Z',
+		'suffixes': []
+	}
+
+	def test_empty_hash(self):
+		assert str(ScoreHash(JsonScore(self.EMPTY))) == (
+			'2018-06-20T20:01:32Z 178.128.169.239 4096 Rg3XJle8@48b368ce23ed97fe'
+		)
+
+	def test_full_hash(self):
+		assert str(ScoreHash(JsonScore(self.FULL))) == (
+			'b7948e996c6765c1d625dafbb6d3aa5fabddc7232cdec19430c8d0960e000000'
+		)
