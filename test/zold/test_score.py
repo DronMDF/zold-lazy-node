@@ -42,6 +42,8 @@ class TestJsonScore:
 		''' Проверяем, что JsonScore Без суффиксов тоже валиден '''
 		assert JsonScore(self.EMPTY).valid()
 
+	# @todo #50 ScoreValue должно тестироваться в отдельном классе,
+	#  не нужно смешивать это с JsonScore
 	def test_value(self):
 		''' размер JsonScore '''
 		assert ScoreValue(JsonScore(self.FULL)).value() == 6

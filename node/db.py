@@ -6,8 +6,9 @@
 
 ''' Модель данных (схема БД) '''
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
+from zold.time import NowTime
 
 DB = SQLAlchemy()
 
@@ -22,7 +23,7 @@ class Score(DB.Model):
 	suffixes = DB.relationship('Suffix', backref='score', lazy=True)
 
 	def __init__(self, host, port, invoice):
-		self.time = datetime.now()
+		self.time = NowTime().as_datetime()
 		self.host = host
 		self.port = port
 		self.invoice = invoice
@@ -37,4 +38,4 @@ class Suffix(DB.Model):
 
 	def __init__(self, value):
 		self.value = value
-		self.time = datetime.now()
+		self.time = NowTime().as_datetime()
