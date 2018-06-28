@@ -7,7 +7,8 @@
 ''' WEB интерфейс узла '''
 
 from flask import Flask, jsonify, request
-from zold.score import StrongestScore, ScoreHash
+from werkzeug.exceptions import NotAcceptable, BadRequest
+from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
 from node.score import DbScores, AtLeastOneDbScores
 from node.db import DB
 
@@ -47,18 +48,20 @@ def api_root():
 @APP.route('/score', methods=['POST'])
 def api_score():
 	''' Загрузка суффиксов на сервер '''
-	try:
-		suffix = request.json.get('suffix')
-		DbScores().new_suffix(suffix)
-		resp = jsonify({})
-		resp.status_code = 200
-		resp.headers['X-Zold-Version'] = '0.0.0'
-		return resp
-	except Exception:
-		resp = jsonify({})
-		resp.status_code = 400
-		resp.headers['X-Zold-Version'] = '0.0.0'
-		return resp
+	suffix = request.json.get('suffix', None)
+	if suffix is None:
+		raise BadRequest("Bad request")
+	score = next((
+		p
+		for p in (NextScore(s, suffix) for s in DbScores())
+		if ScoreValid(p)
+	), None)
+	if score is None:
+		raise NotAcceptable("Wrong suffix")
+	resp = jsonify({})
+	resp.status_code = 200
+	resp.headers['X-Zold-Version'] = '0.0.0'
+	return resp
 
 
 @APP.route('/remotes', methods=['GET'])
