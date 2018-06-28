@@ -6,7 +6,6 @@
 
 ''' Модель данных (схема БД) '''
 
-from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from zold.time import NowTime
 

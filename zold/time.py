@@ -21,6 +21,7 @@ class DatetimeTime:
 		return self.time.isoformat().replace('+00:00', 'Z')
 
 	def as_datetime(self):
+		''' Вернуть дату в формате datetime '''
 		return self.time
 
 
@@ -33,4 +34,5 @@ class NowTime:
 		return str(self.time)
 
 	def as_datetime(self):
+		''' Вернуть дату в формате datetime '''
 		return self.time.as_datetime()
