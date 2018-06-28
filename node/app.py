@@ -9,7 +9,7 @@
 from datetime import datetime
 from flask import Flask, jsonify, request
 from zold.score import StrongestScore
-from node.score import DbScores
+from node.score import DbScores, AtLeastOneDbScores
 from node.db import DB
 
 APP = Flask(__name__)
@@ -33,7 +33,7 @@ def api_root():
 	#  Но пока можно прописать константу.
 	data = {
 		'version': '0.6.1',
-		'score': StrongestScore(DbScores()).json(),
+		'score': StrongestScore(AtLeastOneDbScores(DbScores())).json(),
 		'farm': {
 			# @todo #36 Список current должен содержать базовые хеши
 			#  по всем актуальным Score для дальнейшего рассчета.

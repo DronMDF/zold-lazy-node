@@ -21,6 +21,12 @@ class Score(DB.Model):
 	invoice = DB.Column(DB.String(64))
 	suffixes = DB.relationship('Suffix', backref='score', lazy=True)
 
+	def __init__(self, host, port, invoice):
+		self.time = datetime.now()
+		self.host = host
+		self.port = port
+		self.invoice = invoice
+
 
 class Suffix(DB.Model):
 	''' Суффиксы для Score's '''
