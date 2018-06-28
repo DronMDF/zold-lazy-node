@@ -17,6 +17,7 @@ class DbScore:
 	def prefix(self):
 		''' Префиксная часть Score '''
 		return ' '.join((
+			# @todo #41 Формат даты времени не соответствует WP
 			self.record.time.isoformat(),
 			self.record.host,
 			str(self.record.port),
@@ -61,7 +62,6 @@ class AtLeastOneDbScores:
 		self.scores = scores
 
 	def __iter__(self):
-		print('Проверочка')
 		if self.scores:
 			yield from self.scores
 		else:
@@ -69,4 +69,4 @@ class AtLeastOneDbScores:
 			score = Score('1.2.3.4', 4096, 'invoice')
 			DB.session.add(score)
 			DB.session.commit()
-			yield score
+			yield DbScore(score)
