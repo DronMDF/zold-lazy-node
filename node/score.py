@@ -7,6 +7,7 @@
 
 ''' Score из БД'''
 from node.db import DB, Score, Suffix
+from zold.time import DatetimeTime
 
 
 class DbScore:
@@ -17,8 +18,7 @@ class DbScore:
 	def prefix(self):
 		''' Префиксная часть Score '''
 		return ' '.join((
-			# @todo #41 Формат даты времени не соответствует WP
-			self.record.time.isoformat(),
+			str(DatetimeTime(self.record.time)),
 			self.record.host,
 			str(self.record.port),
 			self.record.invoice
@@ -34,7 +34,7 @@ class DbScore:
 	def json(self):
 		''' Унифицированное json представление '''
 		return {
-			'time': self.record.time.isoformat(),
+			'time': str(DatetimeTime(self.record.time)),
 			'host': self.record.host,
 			'port': self.record.port,
 			'invoice': self.record.invoice,
