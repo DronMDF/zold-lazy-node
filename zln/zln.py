@@ -20,6 +20,8 @@ def sform(suffix_num):
 	return base58.b58encode(suffix_num.to_bytes(8, 'little'))[:7].decode('ascii')
 
 
+# @todo Это должен быть класс NextScore,
+#  который умеет майнить следующий суффикс, этот код нужен в тесте
 def mine(prefix, start):
 	''' Поиск новохо суффикса '''
 	return next((
