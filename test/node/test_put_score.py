@@ -23,7 +23,8 @@ class TestPutScore:
 		'''
 		Правильный суффикс принимается сервером и включается в отдачу
 		Чтобы тест не зависео от времени - он должен сам майнить...
-		это медленно, но что делать.
+		это медленно, поэтому мы проверяем здесь и тот факт, что сервер
+		зафиксировал у себя результат нашей работы.
 		'''
 		info = APP.test_client().get('/')
 		score = JsonScore(info.json.get('score'))
@@ -37,3 +38,6 @@ class TestPutScore:
 		))
 		response = APP.test_client().post('/score', json={'suffix': suffix})
 		assert response.status_code == status.HTTP_200_OK
+		assert suffix in JsonScore(
+			APP.test_client().get('/').json.get('score')
+		).suffixes()

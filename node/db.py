@@ -35,6 +35,7 @@ class Suffix(DB.Model):
 	time = DB.Column(DB.DateTime)
 	score_id = DB.Column(DB.Integer, DB.ForeignKey('score.id'))
 
-	def __init__(self, value):
+	def __init__(self, value, score_id):
 		self.value = value
 		self.time = NowTime().as_datetime()
+		self.score_id = score_id

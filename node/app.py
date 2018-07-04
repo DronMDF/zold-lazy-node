@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, request
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
-from node.score import DbScores, AtLeastOneDbScores
+from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
 from node.db import DB
 
 APP = Flask(__name__)
@@ -58,6 +58,7 @@ def api_score():
 	), None)
 	if score is None:
 		raise NotAcceptable("Wrong suffix")
+	DbSavedScore(score).save()
 	resp = jsonify({})
 	resp.status_code = 200
 	resp.headers['X-Zold-Version'] = '0.0.0'

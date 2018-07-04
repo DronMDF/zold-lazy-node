@@ -72,6 +72,12 @@ class NextScore:
 		''' А суффикс на один длиннее '''
 		return self.score.suffixes() + [self.suffix]
 
+	def json(self):
+		''' Новый core в виде json '''
+		json = self.score.json()
+		json['suffixes'].append(self.suffix)
+		return json
+
 
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
