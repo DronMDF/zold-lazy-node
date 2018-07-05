@@ -14,7 +14,6 @@ score.suffixes() - суффиксы
 str(score) - В виде строки
 score.json() - в виде json
 
-score.valid() - Полностью валиден
 score.expired() - устарел
 
 '''
@@ -47,15 +46,6 @@ class JsonScore:
 		''' Список суффиксов'''
 		return self.data['suffixes']
 
-	def valid(self):
-		''' Проверка валидности Score '''
-		prefix = self.prefix()
-		for suffix in self.suffixes():
-			prefix = hashlib.sha256((prefix + ' ' + suffix).encode('ascii')).hexdigest()
-			if not prefix.endswith('0' * 6):
-				return False
-		return True
-
 
 class StrongestScore:
 	''' Самый мощный score из списка '''
@@ -65,6 +55,28 @@ class StrongestScore:
 	def json(self):
 		''' В виде json '''
 		return max(self.scores, key=lambda s: ScoreValue(s).value()).json()
+
+
+# @todo #51 ротестировать NextScore
+class NextScore:
+	''' Увеличенный Score на один суффикс больше, чем предыдущий '''
+	def __init__(self, score, suffix):
+		self.score = score
+		self.suffix = suffix
+
+	def prefix(self):
+		''' Префикс как и у оригинального '''
+		return self.score.prefix()
+
+	def suffixes(self):
+		''' А суффикс на один длиннее '''
+		return self.score.suffixes() + [self.suffix]
+
+	def json(self):
+		''' Новый core в виде json '''
+		json = self.score.json()
+		json['suffixes'].append(self.suffix)
+		return json
 
 
 class ScoreValue:
@@ -97,3 +109,18 @@ class ScoreHash:
 			if not prefix.endswith('0' * self.strongest):
 				raise RuntimeError("Невалидный Score")
 		return prefix
+
+
+# @todo #54 Протестировать ScoreValid
+class ScoreValid:
+	''' Вспомогательный класс транслирующийся в True, если score валиден '''
+	def __init__(self, score, strength=6):
+		self.score = score
+		self.strength = strength
+
+	def __bool__(self):
+		try:
+			str(ScoreHash(self.score, self.strength))
+		except Exception:
+			return False
+		return True

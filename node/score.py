@@ -15,6 +15,9 @@ class DbScore:
 	def __init__(self, record):
 		self.record = record
 
+	# @todo #51 Префиксная часть Score должна представлять из себя объект.
+	#  Строка плохо подходит для поиска по базе.
+	#  Приходится брать json и доставать из него поля для поиска.
 	def prefix(self):
 		''' Префиксная часть Score '''
 		return ' '.join((
@@ -42,6 +45,30 @@ class DbScore:
 		}
 
 
+# @todo #51 Это утилитный класс, служит только для записи Score в БД.
+#  По сути это такая функция. Надо взглянуть на это с другой стороны
+#  и сделать сохранение в БД более объектным
+class DbSavedScore:
+	''' Сохраненный score, не забудьте вызвать метод save '''
+	def __init__(self, score):
+		self.score = score
+
+	def save(self):
+		''' Сохранение, имеющиеся записи не трогаются. '''
+		jscore = self.score.json()
+		# @todo #51 Лучше использовать id, поскольку по времени,
+		#  полученному через json она ничего не найдет...
+		dbscore = Score.query.filter_by(
+			**{k: jscore[k] for k in ('host', 'port', 'invoice')}
+		).first()
+		if dbscore is None:
+			raise RuntimeError("Score not found")
+		for suffix in self.score.suffixes():
+			if Suffix.query.filter_by(value=suffix, score_id=dbscore.id).count() == 0:
+				DB.session.add(Suffix(suffix, dbscore.id))
+		DB.session.commit()
+
+
 class DbScores:
 	''' Список всех Score из БД '''
 	def __iter__(self):
@@ -49,11 +76,6 @@ class DbScores:
 
 	def __bool__(self):
 		return Score.query.count() != 0
-
-	def new_suffix(self, suffix):
-		''' Добавляем новый суффикс в БД '''
-		DB.session.add(Suffix(suffix))
-		DB.session.commit()
 
 
 class AtLeastOneDbScores:

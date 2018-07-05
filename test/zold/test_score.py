@@ -6,7 +6,13 @@
 
 ''' Score '''
 
-from zold.score import JsonScore, StrongestScore, ScoreValue, ScoreHash
+from zold.score import (
+	JsonScore,
+	ScoreHash,
+	ScoreValid,
+	ScoreValue,
+	StrongestScore
+)
 
 
 class TestJsonScore:
@@ -36,11 +42,11 @@ class TestJsonScore:
 
 	def test_valid(self):
 		''' Проверяем, что JsonScore валиден '''
-		assert JsonScore(self.FULL).valid()
+		assert ScoreValid(JsonScore(self.FULL))
 
 	def test_valid_empty(self):
 		''' Проверяем, что JsonScore Без суффиксов тоже валиден '''
-		assert JsonScore(self.EMPTY).valid()
+		assert ScoreValid(JsonScore(self.EMPTY))
 
 	# @todo #50 ScoreValue должно тестироваться в отдельном классе,
 	#  не нужно смешивать это с JsonScore
