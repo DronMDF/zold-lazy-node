@@ -6,6 +6,7 @@
 
 
 ''' Score из БД'''
+from random import randint
 from node.db import DB, Score, Suffix
 from zold.time import DatetimeTime
 
@@ -80,15 +81,24 @@ class DbScores:
 
 class AtLeastOneDbScores:
 	''' DbScores как минимум из одного Score '''
-	def __init__(self, scores):
+	def __init__(self, scores, config):
 		self.scores = scores
+		self.config = config
 
 	def __iter__(self):
 		if self.scores:
 			yield from self.scores
 		else:
-			# @todo #41 Необходимо наполнить новый Score Адекватными данными
-			score = Score('1.2.3.4', 4096, 'invoice')
+			key_pos = randint(0, len(self.config['PUBLIC_KEY']) - 8)
+			score = Score(
+				self.config['HOST'],
+				self.config['PORT'],
+				' '.join((
+					self.config['PUBLIC_KEY'][key_pos:key_pos + 8],
+					'@',
+					self.config['WALLET']
+				))
+			)
 			DB.session.add(score)
 			DB.session.commit()
 			yield DbScore(score)
