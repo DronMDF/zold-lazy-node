@@ -86,27 +86,23 @@ def api_remotes():
 	return resp
 
 
-@APP.route('/wallet/<w_id>', methods=['GET'])
-def api_get_wallet():
+@APP.route('/wallet/<wallet_id>', methods=['GET'])
+def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	# @todo #6 Необходимо вычитывать содержимое кошелька из БД.
-	data = {}
-
-	resp = jsonify(data)
+	resp = jsonify({'id': wallet_id})
 	resp.status_code = 404
 	resp.headers['X-Zold-Version'] = '0.0.0'
 
 	return resp
 
 
-@APP.route('/wallet/<w_id>', methods=['PUT'])
-def api_put_wallet():
+@APP.route('/wallet/<wallet_id>', methods=['PUT'])
+def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
-	data = {}
-
-	resp = jsonify(data)
+	resp = jsonify({'id': wallet_id})
 	resp.status_code = 400
 	resp.headers['X-Zold-Version'] = '0.0.0'
 
