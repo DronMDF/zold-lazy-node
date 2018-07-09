@@ -13,8 +13,7 @@ from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
 from node.db import DB
 
 APP = Flask(__name__)
-APP.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+APP.config.from_object('node.config')
 DB.init_app(APP)
 with APP.app_context():
 	DB.create_all()
@@ -30,7 +29,7 @@ def api_root():
 	#  Но пока можно прописать константу.
 	data = {
 		'version': '0.6.1',
-		'score': StrongestScore(AtLeastOneDbScores(DbScores())).json(),
+		'score': StrongestScore(AtLeastOneDbScores(DbScores(), APP.config)).json(),
 		'farm': {
 			'current': [
 				str(ScoreHash(s)) for s in DbScores()
