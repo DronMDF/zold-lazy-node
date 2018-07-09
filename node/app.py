@@ -9,8 +9,9 @@
 from flask import Flask, jsonify, request
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
-from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
 from node.db import DB
+from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
+from node.wallet import DbWallet
 
 APP = Flask(__name__)
 APP.config.from_object('node.config')
@@ -90,10 +91,18 @@ def api_remotes():
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	# @todo #6 Необходимо вычитывать содержимое кошелька из БД.
-	resp = jsonify({'id': wallet_id})
-	resp.status_code = 404
+	try:
+		resp = jsonify({
+			'version': '0.0.0',
+			'protocol': '1',
+			'id': wallet_id,
+			'body': DbWallet(wallet_id).body()
+		})
+		resp.status_code = 200
+	except RuntimeError:
+		resp = jsonify({})
+		resp.status_code = 404
 	resp.headers['X-Zold-Version'] = '0.0.0'
-
 	return resp
 
 
@@ -102,10 +111,14 @@ def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
-	resp = jsonify({'id': wallet_id})
-	resp.status_code = 400
+	DbWallet(wallet_id, request.data).save()
+	resp = jsonify({
+		'version': '0.0.0',
+		'protocol': '1',
+		'id': wallet_id,
+	})
+	resp.status_code = 202
 	resp.headers['X-Zold-Version'] = '0.0.0'
-
 	return resp
 
 
