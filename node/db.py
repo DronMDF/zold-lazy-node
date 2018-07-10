@@ -45,7 +45,7 @@ class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)
 	wallet_id = DB.Column(DB.String(16))
-	body = DB.Column(DB.Text())
+	body = DB.Column(DB.UnicodeText())
 
 	def __init__(self, wallet_id, body):
 		self.wallet_id = wallet_id
