@@ -90,7 +90,6 @@ def api_remotes():
 @APP.route('/wallet/<wallet_id>', methods=['GET'])
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
-	# @todo #6 Необходимо вычитывать содержимое кошелька из БД.
 	try:
 		resp = jsonify({
 			'version': '0.0.0',
