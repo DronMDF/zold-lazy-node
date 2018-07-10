@@ -111,7 +111,7 @@ def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
-	DbWallet(wallet_id, request.data).save()
+	DbWallet(wallet_id, request.data.decode('utf8')).save()
 	resp = jsonify({
 		'version': '0.0.0',
 		'protocol': '1',
