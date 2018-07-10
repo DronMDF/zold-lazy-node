@@ -52,7 +52,7 @@ class TestGetWallet:
 
 	def test_wallet_ok(self):
 		''' Сервер возвращает содержимое кошелька '''
-		APP.test_client().post('/wallet/0000000000000000', data=self.WALLET)
+		APP.test_client().put('/wallet/0000000000000000', data=self.WALLET)
 		response = APP.test_client().get('/wallet/0000000000000000')
 		assert response.status_code == status.HTTP_200_OK
-		assert response.json.body == self.WALLET
+		assert response.json['body'] == self.WALLET
