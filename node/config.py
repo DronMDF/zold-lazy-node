@@ -11,5 +11,5 @@ PORT = 777
 WALLET = '1234567887654321'
 PUBLIC_KEY = 'Replace this string to production public key'
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/test.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
