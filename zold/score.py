@@ -21,6 +21,37 @@ score.expired() - устарел
 import hashlib
 
 
+# @todo #68 StringScore('<zold.score.StrongestScore object at 0x7f462d0>')
+#  считается валидным. Вероятно это происходит потому,
+#  что мы не контролируем содержимое первых 4 элементов
+class StringScore:
+	''' вьюв для Score, преедставленных в виде строки'''
+	def __init__(self, score):
+		self.score = score
+
+	def __str__(self):
+		return self.score
+
+	def json(self):
+		''' Представление в виде json '''
+		parts = self.score.split()
+		return {
+			'time': parts[0],
+			'host': parts[1],
+			'port': parts[2],
+			'invoice': parts[3],
+			'suffixes': parts[4:]
+		}
+
+	def prefix(self):
+		''' Префиксная часть '''
+		return ' '.join(self.score.split()[:4])
+
+	def suffixes(self):
+		''' Список суффиксов '''
+		return self.score.split()[4:]
+
+
 class JsonScore:
 	''' Этот Score конструируется из json '''
 	def __init__(self, json):
@@ -51,6 +82,9 @@ class StrongestScore:
 	''' Самый мощный score из списка '''
 	def __init__(self, scores):
 		self.scores = scores
+
+	def __str__(self):
+		return str(max(self.scores, key=lambda s: ScoreValue(s).value()))
 
 	def json(self):
 		''' В виде json '''
@@ -111,7 +145,6 @@ class ScoreHash:
 		return prefix
 
 
-# @todo #54 Протестировать ScoreValid
 class ScoreValid:
 	''' Вспомогательный класс транслирующийся в True, если score валиден '''
 	def __init__(self, score, strength=6):

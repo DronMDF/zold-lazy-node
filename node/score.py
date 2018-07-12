@@ -35,6 +35,16 @@ class DbScore:
 			for s in Suffix.query.filter(Suffix.score_id == self.record.id).all()
 		]
 
+	def __str__(self):
+		return ' '.join(
+			[
+				str(DatetimeTime(self.record.time)),
+				self.record.host,
+				str(self.record.port),
+				self.record.invoice,
+			] + self.suffixes()
+		)
+
 	def json(self):
 		''' Унифицированное json представление '''
 		return {
@@ -93,7 +103,7 @@ class AtLeastOneDbScores:
 			score = Score(
 				self.config['HOST'],
 				self.config['PORT'],
-				' '.join((
+				''.join((
 					self.config['PUBLIC_KEY'][key_pos:key_pos + 8],
 					'@',
 					self.config['WALLET']
