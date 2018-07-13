@@ -117,7 +117,7 @@ def api_put_wallet(wallet_id):
 		'protocol': '1',
 		'id': wallet_id,
 		'score': StrongestScore(AtLeastOneDbScores(DbScores(), APP.config)).json()
-	})
+	}
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.
 	#  Но текущий клиент рассчитывает, что сервер отвечает кодом HTTP_200_OK.
 	#  Достоточно сложно будет перейти с одного на другой.
