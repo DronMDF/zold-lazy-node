@@ -6,18 +6,36 @@
 
 ''' WEB интерфейс узла '''
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
 from node.db import DB
 from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
 from node.wallet import DbWallet
 
+
+class JsonResponse(Response):
+	''' Возвращаем JSON '''
+	@classmethod
+	def force_type(cls, response, environ=None):
+		if isinstance(response, dict):
+			response = jsonify(response)
+		return super(JsonResponse, cls).force_type(response, environ)
+
+
 APP = Flask(__name__)
+APP.response_class = JsonResponse
 APP.config.from_object('node.config')
 DB.init_app(APP)
 with APP.app_context():
 	DB.create_all()
+
+
+@APP.after_request
+def after_request(response):
+	''' Добавляем кастомный HTTP заголовок '''
+	response.headers.add('X-Zold-Version', '0.0.0')
+	return response
 
 
 @APP.route('/', methods=['GET'])
@@ -37,12 +55,7 @@ def api_root():
 			]
 		}
 	}
-
-	resp = jsonify(data)
-	resp.status_code = 200
-	resp.headers['X-Zold-Version'] = '0.0.0'
-
-	return resp
+	return data
 
 
 @APP.route('/score', methods=['POST'])
@@ -59,10 +72,8 @@ def api_score():
 	if score is None:
 		raise NotAcceptable("Wrong suffix")
 	DbSavedScore(score).save()
-	resp = jsonify({})
-	resp.status_code = 200
-	resp.headers['X-Zold-Version'] = '0.0.0'
-	return resp
+	data = {}
+	return data
 
 
 @APP.route('/remotes', methods=['GET'])
@@ -75,34 +86,23 @@ def api_remotes():
 			{"host": "b1.zold.io", "port": 80, "score": 0}
 		]
 	}
-	# @todo #4 Это копипаста... я вижу эти три строки уже два раза.
-	#  И подозреваю, что будет больше. Необходимо вынести этот функционал
-	#  в отдельный класс.  К тому же заголовок тоже будет больше...
-	#  Есть запрос 228 на заголовок X-Zold-Network.
-	#  zold потенциально поддерживает разные сети.
-	resp = jsonify(data)
-	resp.status_code = 200
-	resp.headers['X-Zold-Version'] = '0.0.0'
-
-	return resp
+	return data
 
 
 @APP.route('/wallet/<wallet_id>', methods=['GET'])
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	try:
-		resp = jsonify({
+		data = {
 			'version': '0.0.0',
 			'protocol': '1',
 			'id': wallet_id,
 			'body': DbWallet(wallet_id).body()
-		})
-		resp.status_code = 200
+		}
 	except RuntimeError:
-		resp = jsonify({})
-		resp.status_code = 404
-	resp.headers['X-Zold-Version'] = '0.0.0'
-	return resp
+		data = {}
+		return data, 404
+	return data
 
 
 @APP.route('/wallet/<wallet_id>', methods=['PUT'])
@@ -111,14 +111,12 @@ def api_put_wallet(wallet_id):
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
 	DbWallet(wallet_id, request.data.decode('utf8')).save()
-	resp = jsonify({
+	data = {
 		'version': '0.0.0',
 		'protocol': '1',
 		'id': wallet_id,
-	})
-	resp.status_code = 202
-	resp.headers['X-Zold-Version'] = '0.0.0'
-	return resp
+	}
+	return data, 202
 
 
 if __name__ == '__main__':
