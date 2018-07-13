@@ -7,9 +7,9 @@
 ''' Конфигурация узла '''
 
 HOST = 'localhost'
-PORT = 777
+PORT = 8000
 WALLET = '1234567887654321'
-PUBLIC_KEY = 'Replace this string to production public key'
+PUBLIC_KEY = 'Replacethisstringtoproductionpublickey'
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True

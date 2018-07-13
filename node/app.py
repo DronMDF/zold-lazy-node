@@ -7,6 +7,7 @@
 ''' WEB интерфейс узла '''
 
 from flask import Flask, jsonify, request, Response
+from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
 from node.db import DB
@@ -115,8 +116,13 @@ def api_put_wallet(wallet_id):
 		'version': '0.0.0',
 		'protocol': '1',
 		'id': wallet_id,
+		'score': StrongestScore(AtLeastOneDbScores(DbScores(), APP.config)).json()
 	}
-	return data, 202
+	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.
+	#  Но текущий клиент рассчитывает, что сервер отвечает кодом HTTP_200_OK.
+	#  Достоточно сложно будет перейти с одного на другой.
+	#  Клиент должен будет поддерживать оба.
+	return data, status.HTTP_200_OK
 
 
 if __name__ == '__main__':
