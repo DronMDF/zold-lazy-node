@@ -26,8 +26,9 @@ import hashlib
 #  что мы не контролируем содержимое первых 4 элементов
 class StringScore:
 	''' вьюв для Score, преедставленных в виде строки'''
-	def __init__(self, score):
+	def __init__(self, score, config):
 		self.score = score
+		self.config = config
 
 	def __str__(self):
 		return self.score
@@ -40,7 +41,8 @@ class StringScore:
 			'host': parts[1],
 			'port': parts[2],
 			'invoice': parts[3],
-			'suffixes': parts[4:]
+			'suffixes': parts[4:],
+			'strength': self.config['STRENGTH']
 		}
 
 	def prefix(self):
@@ -80,15 +82,20 @@ class JsonScore:
 
 class StrongestScore:
 	''' Самый мощный score из списка '''
-	def __init__(self, scores):
+	def __init__(self, scores, config):
 		self.scores = scores
+		self.config = config
 
 	def __str__(self):
-		return str(max(self.scores, key=lambda s: ScoreValue(s).value()))
+		return str(
+			max(self.scores, key=lambda s: ScoreValue(s, self.config).value())
+		)
 
 	def json(self):
 		''' В виде json '''
-		return max(self.scores, key=lambda s: ScoreValue(s).value()).json()
+		return max(
+			self.scores, key=lambda s: ScoreValue(s, self.config).value()
+		).json()
 
 
 # @todo #51 ротестировать NextScore
@@ -115,8 +122,9 @@ class NextScore:
 
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
-	def __init__(self, score):
+	def __init__(self, score, config):
 		self.score = score
+		self.config = config
 
 	def value(self):
 		''' Значение score (количество валидных суффиксов)'''
@@ -124,7 +132,7 @@ class ScoreValue:
 		value = 0
 		for suffix in self.score.suffixes():
 			prefix = hashlib.sha256((prefix + ' ' + suffix).encode('ascii')).hexdigest()
-			if not prefix.endswith('0' * 6):
+			if not prefix.endswith('0' * self.config['STRENGTH']):
 				break
 			value += 1
 		return value
@@ -132,28 +140,28 @@ class ScoreValue:
 
 class ScoreHash:
 	''' Последний хеш Score. Если суффиксов нет, то возвращается префикс '''
-	def __init__(self, score, strongest=6):
+	def __init__(self, score, config):
 		self.score = score
-		self.strongest = strongest
+		self.config = config
 
 	def __str__(self):
 		prefix = self.score.prefix()
 		for suffix in self.score.suffixes():
 			prefix = hashlib.sha256((prefix + ' ' + suffix).encode('ascii')).hexdigest()
-			if not prefix.endswith('0' * self.strongest):
+			if not prefix.endswith('0' * self.config['STRENGTH']):
 				raise RuntimeError("Невалидный Score")
 		return prefix
 
 
 class ScoreValid:
 	''' Вспомогательный класс транслирующийся в True, если score валиден '''
-	def __init__(self, score, strength=6):
+	def __init__(self, score, config):
 		self.score = score
-		self.strength = strength
+		self.config = config
 
 	def __bool__(self):
 		try:
-			str(ScoreHash(self.score, self.strength))
+			str(ScoreHash(self.score, self.config))
 		except Exception:
 			return False
 		return True

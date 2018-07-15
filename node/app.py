@@ -49,10 +49,12 @@ def api_root():
 	#  Но пока можно прописать константу.
 	data = {
 		'version': '0.6.1',
-		'score': StrongestScore(AtLeastOneDbScores(DbScores(), APP.config)).json(),
+		'score': StrongestScore(
+			AtLeastOneDbScores(DbScores(), APP.config), APP.config
+		).json(),
 		'farm': {
 			'current': [
-				str(ScoreHash(s)) for s in DbScores()
+				str(ScoreHash(s, APP.config)) for s in DbScores()
 			]
 		}
 	}
@@ -68,7 +70,7 @@ def api_score():
 	score = next((
 		p
 		for p in (NextScore(s, suffix) for s in DbScores())
-		if ScoreValid(p)
+		if ScoreValid(p, APP.config)
 	), None)
 	if score is None:
 		raise NotAcceptable("Wrong suffix")
@@ -116,7 +118,9 @@ def api_put_wallet(wallet_id):
 		'version': '0.0.0',
 		'protocol': '1',
 		'id': wallet_id,
-		'score': StrongestScore(AtLeastOneDbScores(DbScores(), APP.config)).json()
+		'score': StrongestScore(
+			AtLeastOneDbScores(DbScores(), APP.config), APP.config
+		).json()
 	}
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.
 	#  Но текущий клиент рассчитывает, что сервер отвечает кодом HTTP_200_OK.

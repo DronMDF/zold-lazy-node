@@ -10,6 +10,7 @@ HOST = 'localhost'
 PORT = 8000
 WALLET = '1234567887654321'
 PUBLIC_KEY = 'Replacethisstringtoproductionpublickey'
+STRENGTH = 3
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
