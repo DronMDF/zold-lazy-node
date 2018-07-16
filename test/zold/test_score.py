@@ -42,21 +42,21 @@ class TestJsonScore:
 
 	def test_valid(self):
 		''' Проверяем, что JsonScore валиден '''
-		assert ScoreValid(JsonScore(self.FULL))
+		assert ScoreValid(JsonScore(self.FULL), {'STRENGTH': 6})
 
 	def test_valid_empty(self):
 		''' Проверяем, что JsonScore Без суффиксов тоже валиден '''
-		assert ScoreValid(JsonScore(self.EMPTY))
+		assert ScoreValid(JsonScore(self.EMPTY), {'STRENGTH': 6})
 
 	# @todo #50 ScoreValue должно тестироваться в отдельном классе,
 	#  не нужно смешивать это с JsonScore
 	def test_value(self):
 		''' размер JsonScore '''
-		assert ScoreValue(JsonScore(self.FULL)).value() == 6
+		assert ScoreValue(JsonScore(self.FULL), {'STRENGTH': 6}).value() == 6
 
 	def test_value_empty(self):
 		''' Размер пустого JsonScore '''
-		assert ScoreValue(JsonScore(self.EMPTY)).value() == 0
+		assert ScoreValue(JsonScore(self.EMPTY), {'STRENGTH': 6}).value() == 0
 
 
 class TestStrongestScore:
@@ -77,7 +77,10 @@ class TestStrongestScore:
 	}
 
 	def test_json(self):
-		score = StrongestScore([JsonScore(self.EMPTY), JsonScore(self.STRONGEST)])
+		score = StrongestScore(
+			[JsonScore(self.EMPTY), JsonScore(self.STRONGEST)],
+			{'STRENGTH': 6}
+		)
 		assert score.json()['invoice'] == '2X8kfnzk@9a856dac7d475014'
 
 
@@ -99,11 +102,11 @@ class TestScoreHash:
 	}
 
 	def test_empty_hash(self):
-		assert str(ScoreHash(JsonScore(self.EMPTY))) == (
+		assert str(ScoreHash(JsonScore(self.EMPTY), {'STRENGTH': 6})) == (
 			'2018-06-20T20:01:32Z 178.128.169.239 4096 Rg3XJle8@48b368ce23ed97fe'
 		)
 
 	def test_full_hash(self):
-		assert str(ScoreHash(JsonScore(self.FULL))) == (
+		assert str(ScoreHash(JsonScore(self.FULL), {'STRENGTH': 6})) == (
 			'b7948e996c6765c1d625dafbb6d3aa5fabddc7232cdec19430c8d0960e000000'
 		)

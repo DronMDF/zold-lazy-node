@@ -20,12 +20,14 @@ class Score(DB.Model):
 	port = DB.Column(DB.Integer)
 	invoice = DB.Column(DB.String(64))
 	suffixes = DB.relationship('Suffix', backref='score', lazy=True)
+	strength = DB.Column(DB.Integer)
 
-	def __init__(self, host, port, invoice):
+	def __init__(self, host, port, invoice, strength):
 		self.time = NowTime().as_datetime()
 		self.host = host
 		self.port = port
 		self.invoice = invoice
+		self.strength = strength
 
 
 class Suffix(DB.Model):

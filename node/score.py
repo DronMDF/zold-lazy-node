@@ -52,7 +52,8 @@ class DbScore:
 			'host': self.record.host,
 			'port': self.record.port,
 			'invoice': self.record.invoice,
-			'suffixes': self.suffixes()
+			'suffixes': self.suffixes(),
+			'strength': self.record.strength
 		}
 
 
@@ -107,7 +108,8 @@ class AtLeastOneDbScores:
 					self.config['PUBLIC_KEY'][key_pos:key_pos + 8],
 					'@',
 					self.config['WALLET']
-				))
+				)),
+				self.config['STRENGTH']
 			)
 			DB.session.add(score)
 			DB.session.commit()

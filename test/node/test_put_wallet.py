@@ -37,4 +37,4 @@ class TestPutWallet:
 			'/wallet/cb91e8b5b4b66866',
 			data=self.EMPTY_WALLET
 		)
-		assert ScoreValid(JsonScore(response.json['score']))
+		assert ScoreValid(JsonScore(response.json['score']), APP.config)

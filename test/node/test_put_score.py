@@ -28,13 +28,13 @@ class TestPutScore:
 		'''
 		info = APP.test_client().get('/')
 		score = JsonScore(info.json.get('score'))
-		prefix = str(ScoreHash(score))
+		prefix = str(ScoreHash(score, APP.config))
 		suffix = next((
 			xs
 			for xs in (hex(s) for s in range(0xffffffffffffffff))
 			if hashlib.sha256(
 				(prefix + ' ' + xs).encode('ascii')
-			).hexdigest().endswith('0' * 6)
+			).hexdigest().endswith('0' * APP.config['STRENGTH'])
 		))
 		response = APP.test_client().post('/score', json={'suffix': suffix})
 		assert response.status_code == status.HTTP_200_OK
