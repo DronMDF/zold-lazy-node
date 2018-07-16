@@ -9,9 +9,9 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import StrongestScore, NextScore, ScoreHash, ScoreValid
+from zold.score import StrongestScore, NextScore, ScoreValid
 from node.db import DB
-from node.score import DbSavedScore, DbScores, AtLeastOneDbScores
+from node.score import AtLeastOneDbScores, DbActualScores, DbSavedScore
 from node.wallet import DbWallet
 
 
@@ -47,14 +47,21 @@ def api_root():
 	#  Предлагаю использовать версию, которую выдают соседние сервера.
 	#  Для этого ее видимо необходимо хранить в БД.
 	#  Но пока можно прописать константу.
+	# @todo #66 Старые Score необходимо поудалять из БД
 	data = {
 		'version': '0.6.1',
+		# @todo #66 Вместо AtLeastOneDbScores,
+		#  необходимо использовать как минимум 2 score.
+		#  при этом стоит убедиться, что StrongestScore не сломается,
+		#  если два Score окажутся с одинаковыми уровнями.
 		'score': StrongestScore(
-			AtLeastOneDbScores(DbScores(), APP.config), APP.config
+			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json(),
 		'farm': {
+			# @todo #66 В списке score для майнинга должны отсутствовать score,
+			#  уровень которых достиг 16. Этот список может быть пустым.
 			'current': [
-				str(ScoreHash(s, APP.config)) for s in DbScores()
+				s.json() for s in DbActualScores()
 			]
 		}
 	}
@@ -69,7 +76,7 @@ def api_score():
 		raise BadRequest("Bad request")
 	score = next((
 		p
-		for p in (NextScore(s, suffix) for s in DbScores())
+		for p in (NextScore(s, suffix) for s in DbActualScores())
 		if ScoreValid(p, APP.config)
 	), None)
 	if score is None:
@@ -119,7 +126,7 @@ def api_put_wallet(wallet_id):
 		'protocol': '1',
 		'id': wallet_id,
 		'score': StrongestScore(
-			AtLeastOneDbScores(DbScores(), APP.config), APP.config
+			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json()
 	}
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.

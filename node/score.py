@@ -7,6 +7,7 @@
 
 ''' Score из БД'''
 from random import randint
+from datetime import datetime, timedelta
 from node.db import DB, Score, Suffix
 from zold.time import DatetimeTime
 
@@ -88,6 +89,17 @@ class DbScores:
 
 	def __bool__(self):
 		return Score.query.count() != 0
+
+
+class DbActualScores:
+	''' Список всех Score из БД '''
+	def __iter__(self):
+		since = datetime.now() - timedelta(hours=24)
+		return (DbScore(s) for s in Score.query.filter(Score.time >= since))
+
+	def __bool__(self):
+		since = datetime.now() - timedelta(hours=24)
+		return Score.query.filter(Score.time >= since).count() != 0
 
 
 class AtLeastOneDbScores:
