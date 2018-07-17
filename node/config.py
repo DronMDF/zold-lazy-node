@@ -12,5 +12,7 @@ WALLET = '1234567887654321'
 PUBLIC_KEY = 'Replacethisstringtoproductionpublickey'
 STRENGTH = 3
 
+ZOLD_VERSION = '0.14.13'
+
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
