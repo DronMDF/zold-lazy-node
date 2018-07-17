@@ -35,20 +35,15 @@ with APP.app_context():
 @APP.after_request
 def after_request(response):
 	''' Добавляем кастомный HTTP заголовок '''
-	response.headers.add('X-Zold-Version', '0.0.0')
+	response.headers.add('X-Zold-Version', APP.config['ZOLD_VERSION'])
 	return response
 
 
 @APP.route('/', methods=['GET'])
 def api_root():
 	''' Статус ноды '''
-	# @todo #3 version и X-Zold-Version, должны содержать текущую версию zold.
-	#  Но хранить ее где-то будет не очень удобно.
-	#  Предлагаю использовать версию, которую выдают соседние сервера.
-	#  Для этого ее видимо необходимо хранить в БД.
-	#  Но пока можно прописать константу.
 	data = {
-		'version': '0.6.1',
+		'version': APP.config['ZOLD_VERSION'],
 		'score': StrongestScore(
 			AtLeastOneDbScores(DbScores(), APP.config), APP.config
 		).json(),
@@ -83,10 +78,10 @@ def api_score():
 def api_remotes():
 	''' Список известных и проверенных нод '''
 	data = {
-		"version": "0.13.5",
-		"all": [
-			{"host": "b2.zold.io", "port": 4096, "score": 0},
-			{"host": "b1.zold.io", "port": 80, "score": 0}
+		'version': APP.config['ZOLD_VERSION'],
+		'all': [
+			{'host': 'b2.zold.io', 'port': 4096, 'score': 0},
+			{'host': 'b1.zold.io', 'port': 80, 'score': 0}
 		]
 	}
 	return data
@@ -97,7 +92,7 @@ def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	try:
 		data = {
-			'version': '0.0.0',
+			'version': APP.config['ZOLD_VERSION'],
 			'protocol': '1',
 			'id': wallet_id,
 			'body': DbWallet(wallet_id).body()
@@ -115,7 +110,7 @@ def api_put_wallet(wallet_id):
 	#  сверять с содержимым кошелька.
 	DbWallet(wallet_id, request.get_data().decode('utf8')).save()
 	data = {
-		'version': '0.0.0',
+		'version': APP.config['ZOLD_VERSION'],
 		'protocol': '1',
 		'id': wallet_id,
 		'score': StrongestScore(
