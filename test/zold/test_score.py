@@ -52,11 +52,11 @@ class TestJsonScore:
 	#  не нужно смешивать это с JsonScore
 	def test_value(self):
 		''' размер JsonScore '''
-		assert ScoreValue(JsonScore(self.FULL), {'STRENGTH': 6}).value() == 6
+		assert int(ScoreValue(JsonScore(self.FULL), {'STRENGTH': 6})) == 6
 
 	def test_value_empty(self):
 		''' Размер пустого JsonScore '''
-		assert ScoreValue(JsonScore(self.EMPTY), {'STRENGTH': 6}).value() == 0
+		assert int(ScoreValue(JsonScore(self.EMPTY), {'STRENGTH': 6})) == 0
 
 
 class TestStrongestScore:
