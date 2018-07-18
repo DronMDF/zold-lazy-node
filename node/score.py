@@ -91,15 +91,24 @@ class DbScores:
 		return Score.query.count() != 0
 
 
-class DbActualScores:
-	''' Список всех Score из БД '''
+class DbNewerThenScores:
+	''' Список Score из БД новее указанного интервала '''
+	def __init__(self, hours):
+		self.interval = timedelta(hours=hours)
+
 	def __iter__(self):
-		since = datetime.now() - timedelta(hours=24)
+		since = datetime.now() - self.interval
 		return (DbScore(s) for s in Score.query.filter(Score.time >= since))
 
 	def __bool__(self):
-		since = datetime.now() - timedelta(hours=24)
+		since = datetime.now() - self.interval
 		return Score.query.filter(Score.time >= since).count() != 0
+
+
+class DbActualScores(DbNewerThenScores):
+	''' Список Score из БД которые созданы в течении последних суток'''
+	def __init__(self):
+		super().__init__(hours=24)
 
 
 class AtLeastOneDbScores:

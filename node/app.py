@@ -11,7 +11,12 @@ from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import StrongestScore, NextScore, ScoreValid
 from node.db import DB
-from node.score import AtLeastOneDbScores, DbActualScores, DbSavedScore
+from node.score import (
+	AtLeastOneDbScores,
+	DbActualScores,
+	DbSavedScore,
+	DbNewerThenScores
+)
 from node.wallet import DbWallet
 
 
@@ -45,10 +50,6 @@ def api_root():
 	# @todo #66 Старые Score необходимо поудалять из БД
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
-		# @todo #66 Вместо AtLeastOneDbScores,
-		#  необходимо использовать как минимум 2 score.
-		#  при этом стоит убедиться, что StrongestScore не сломается,
-		#  если два Score окажутся с одинаковыми уровнями.
 		'score': StrongestScore(
 			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json(),
@@ -56,7 +57,8 @@ def api_root():
 			# @todo #66 В списке score для майнинга должны отсутствовать score,
 			#  уровень которых достиг 16. Этот список может быть пустым.
 			'current': [
-				s.json() for s in DbActualScores()
+				s.json()
+				for s in AtLeastOneDbScores(DbNewerThenScores(hours=12), APP.config)
 			]
 		}
 	}
