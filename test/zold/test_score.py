@@ -8,11 +8,45 @@
 
 from zold.score import (
 	JsonScore,
+	MinedScore,
 	ScoreHash,
 	ScoreValid,
 	ScoreValue,
-	StrongestScore
+	StringScore,
+	StrongestScore,
+	WeakScores
 )
+
+
+class TestScore:
+	''' Тестовый score, он имеет необходимое количество суффиксов '''
+	def __init__(self, value, strength=1):
+		if value > 1:
+			self.score = MinedScore(
+				TestScore(value - 1, strength),
+				{'STRENGTH': strength},
+				0
+			)
+		else:
+			self.score = StringScore(
+				'2018-06-20T20:01:32Z 1127.0.0.1 4096 2X8kfnzk@9a856dac7d475014',
+				{'STRENGTH': strength}
+			)
+
+	def __str__(self):
+		return str(self.score)
+
+	def json(self):
+		''' json представление '''
+		return self.score.json()
+
+	def prefix(self):
+		''' Префиксная часть '''
+		return self.score.prefix()
+
+	def suffixes(self):
+		''' Список суффиксов '''
+		return self.suffixes()
 
 
 class TestJsonScore:
@@ -82,6 +116,23 @@ class TestStrongestScore:
 			{'STRENGTH': 6}
 		)
 		assert score.json()['invoice'] == '2X8kfnzk@9a856dac7d475014'
+
+
+class TestWeakScores:
+	config = {'STRENGTH': 1}
+
+	def test_empty(self):
+		assert not WeakScores([], 16, self.config)
+
+	def test_weak(self):
+		assert [
+			int(ScoreValue(s, self.config))
+			for s in WeakScores(
+				[TestScore(17), TestScore(16), TestScore(15), TestScore(0)],
+				16,
+				self.config
+			)
+		] == [15, 0]
 
 
 class TestScoreHash:

@@ -161,6 +161,27 @@ class MinedScore:
 		return json
 
 
+class WeakScores:
+	''' Подмножество Score, которые не достигли указанного уровня '''
+	def __init__(self, scores, level, config):
+		self.scores = scores
+		self.level = level
+		self.config = config
+
+	def __iter__(self):
+		return (
+			s
+			for s in self.scores
+			if int(ScoreValue(s, self.config)) < self.level
+		)
+
+	def __bool__(self):
+		return any((
+			int(ScoreValue(s, self.config)) < self.level
+			for s in self.scores
+		))
+
+
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
 	def __init__(self, score, config):
