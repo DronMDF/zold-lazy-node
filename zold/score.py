@@ -19,6 +19,8 @@ score.expired() - устарел
 '''
 
 import hashlib
+import random
+import base58
 
 
 # @todo #68 StringScore('<zold.score.StrongestScore object at 0x7f462d0>')
@@ -120,6 +122,49 @@ class NextScore:
 		return json
 
 
+class MinedScore:
+	''' Score на один суффикс больше, чем предыдущее '''
+	def __init__(self, score, config, seed=None):
+		self.score = score
+		self.config = config
+		self.seed = seed if seed is not None else random.randint(
+			0,
+			0xffffffffffffffff
+		)
+
+	def prefix(self):
+		''' Префикс такой же, как и у родительского score '''
+		return self.score.prefix()
+
+	def suffix_form(self, suffix_num):
+		''' Строковое представление номера, сейчас это 7-значная строка в base58 '''
+		return base58.b58encode(suffix_num.to_bytes(8, 'little'))[:7].decode('ascii')
+
+	def new_suffix(self):
+		''' Вычисление нового суффикса '''
+		base = str(ScoreHash(self.score, self.config))
+		return next((
+			xs
+			for xs in (
+				self.suffix_form(s)
+				for s in range(self.seed, 0xfffffffffffffffff)
+			)
+			if hashlib.sha256(
+				(base + ' ' + xs).encode('ascii')
+			).hexdigest().endswith('0' * self.config['STRENGTH'])
+		))
+
+	def suffixes(self):
+		''' Суффиксы на один длиннее, чем были '''
+		return self.score.suffixes() + [self.new_suffix()]
+
+	def json(self):
+		''' Новый core в виде json '''
+		json = self.score.json()
+		json['suffixes'].append(self.new_suffix())
+		return json
+
+
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
 	def __init__(self, score, config):
@@ -144,6 +189,8 @@ class ScoreHash:
 		self.score = score
 		self.config = config
 
+	# @todo #65: ScoreHash не должен проверять промежуточные хеши на валидность.
+	#  Для этого у нас есть ScoreValid
 	def __str__(self):
 		prefix = self.score.prefix()
 		for suffix in self.score.suffixes():

@@ -8,29 +8,10 @@
 ''' Утилита для обслуживания узла '''
 
 from datetime import datetime
-import hashlib
-import random
 import sys
-import base58
+import random
 import requests
-
-
-def sform(suffix_num):
-	''' Строковое представление номера, сейчас это 7-значная строка в base58 '''
-	return base58.b58encode(suffix_num.to_bytes(8, 'little'))[:7].decode('ascii')
-
-
-# @todo #54 Это должен быть класс NewScore,
-#  который умеет майнить следующий суффикс, этот код нужен в тесте
-def mine(prefix, start):
-	''' Поиск новохо суффикса '''
-	return next((
-		xs
-		for xs in (sform(s) for s in range(start, 0xffffffffffffffff))
-		if hashlib.sha256(
-			(prefix + ' ' + xs).encode('ascii')
-		).hexdigest().endswith('0' * 6)
-	))
+from zold.score import JsonScore, MinedScore
 
 
 def main(argv):
@@ -42,9 +23,12 @@ def main(argv):
 		if reply.status_code != 200:
 			raise RuntimeError("Ошибка получения информации")
 
-		prefix = random.choice(reply.json().get('farm', {}).get('current', []))
+		json_score = random.choice(reply.json().get('farm', {}).get('current', []))
 		start_time = datetime.now()
-		suffix = mine(prefix, random.randint(0, 0xffffffffffffffff))
+		suffix = MinedScore(
+			JsonScore(json_score),
+			{'STRENGTH': json_score['strength']}
+		).suffixes()[-1]
 		end_time = datetime.now()
 		print("Mined: %s take %.2f sec" % (
 			suffix,
