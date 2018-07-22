@@ -54,8 +54,6 @@ def api_root():
 			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json(),
 		'farm': {
-			# @todo #66 В списке score для майнинга должны отсутствовать score,
-			#  уровень которых достиг 16. Этот список может быть пустым.
 			'current': [
 				s.json()
 				for s in WeakScores(
