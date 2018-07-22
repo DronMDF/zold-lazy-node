@@ -18,19 +18,19 @@ from zold.score import (
 )
 
 
-class TestScore:
+class FakeScore:
 	''' Тестовый score, он имеет необходимое количество суффиксов '''
-	def __init__(self, value, strength=1):
-		if value > 1:
+	def __init__(self, value, config):
+		if value > 0:
 			self.score = MinedScore(
-				TestScore(value - 1, strength),
-				{'STRENGTH': strength},
+				FakeScore(value - 1, config),
+				config,
 				0
 			)
 		else:
 			self.score = StringScore(
 				'2018-06-20T20:01:32Z 1127.0.0.1 4096 2X8kfnzk@9a856dac7d475014',
-				{'STRENGTH': strength}
+				config
 			)
 
 	def __str__(self):
@@ -46,7 +46,7 @@ class TestScore:
 
 	def suffixes(self):
 		''' Список суффиксов '''
-		return self.suffixes()
+		return self.score.suffixes()
 
 
 class TestJsonScore:
@@ -128,11 +128,17 @@ class TestWeakScores:
 		assert [
 			int(ScoreValue(s, self.config))
 			for s in WeakScores(
-				[TestScore(17), TestScore(16), TestScore(15), TestScore(0)],
-				16,
+				[
+					FakeScore(4, self.config),
+					FakeScore(3, self.config),
+					FakeScore(2, self.config),
+					FakeScore(1, self.config),
+					FakeScore(0, self.config)
+				],
+				3,
 				self.config
 			)
-		] == [15, 0]
+		] == [2, 1, 0]
 
 
 class TestScoreHash:
