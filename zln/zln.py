@@ -23,6 +23,11 @@ def main(argv):
 		if reply.status_code != 200:
 			raise RuntimeError("Ошибка получения информации")
 
+		# @todo #81 Если сервер считает, что майнить нечего -
+		#  он возвращает пустой список.
+		#  Майнер должен уходить в спячку в этом случае...
+		#  Тут можно заложиться на время текущего score,
+		#  и проснуться через двенадцать часов от активного.
 		json_score = random.choice(reply.json().get('farm', {}).get('current', []))
 		start_time = datetime.now()
 		suffix = MinedScore(

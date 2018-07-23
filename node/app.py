@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import StrongestScore, NextScore, ScoreValid
+from zold.score import StrongestScore, NextScore, ScoreValid, WeakScores
 from node.db import DB
 from node.score import (
 	AtLeastOneDbScores,
@@ -54,11 +54,13 @@ def api_root():
 			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json(),
 		'farm': {
-			# @todo #66 В списке score для майнинга должны отсутствовать score,
-			#  уровень которых достиг 16. Этот список может быть пустым.
 			'current': [
 				s.json()
-				for s in AtLeastOneDbScores(DbNewerThenScores(hours=12), APP.config)
+				for s in WeakScores(
+					AtLeastOneDbScores(DbNewerThenScores(hours=12), APP.config),
+					16,
+					APP.config
+				)
 			]
 		}
 	}

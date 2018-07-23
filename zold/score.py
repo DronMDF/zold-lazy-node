@@ -89,15 +89,11 @@ class StrongestScore:
 		self.config = config
 
 	def __str__(self):
-		return str(
-			max(self.scores, key=lambda s: ScoreValue(s, self.config).value())
-		)
+		return str(max(self.scores, key=lambda s: int(ScoreValue(s, self.config))))
 
 	def json(self):
 		''' В виде json '''
-		return max(
-			self.scores, key=lambda s: ScoreValue(s, self.config).value()
-		).json()
+		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config))).json()
 
 
 # @todo #51 ротестировать NextScore
@@ -165,14 +161,34 @@ class MinedScore:
 		return json
 
 
+class WeakScores:
+	''' Подмножество Score, которые не достигли указанного уровня '''
+	def __init__(self, scores, level, config):
+		self.scores = scores
+		self.level = level
+		self.config = config
+
+	def __iter__(self):
+		return (
+			s
+			for s in self.scores
+			if int(ScoreValue(s, self.config)) < self.level
+		)
+
+	def __bool__(self):
+		return any((
+			int(ScoreValue(s, self.config)) < self.level
+			for s in self.scores
+		))
+
+
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
 	def __init__(self, score, config):
 		self.score = score
 		self.config = config
 
-	def value(self):
-		''' Значение score (количество валидных суффиксов)'''
+	def __int__(self):
 		prefix = self.score.prefix()
 		value = 0
 		for suffix in self.score.suffixes():
