@@ -6,6 +6,7 @@
 
 
 ''' Score из БД'''
+import re
 from random import randint
 from datetime import datetime, timedelta
 from node.db import DB, Score, Suffix
@@ -117,19 +118,25 @@ class AtLeastOneDbScores:
 		self.scores = scores
 		self.config = config
 
+	def invoice(self):
+		''' Ищем invoice, удовлетворяющий WP '''
+		reg = re.compile('^[a-zA-Z0-9]+$')
+		public = self.config['PUBLIC_KEY']
+		max_pos = len(public) - 8
+		while True:
+			pos = randint(0, max_pos)
+			inv = public[pos:pos + 8]
+			if reg.match(inv):
+				return inv
+
 	def __iter__(self):
 		if self.scores:
 			yield from self.scores
 		else:
-			key_pos = randint(0, len(self.config['PUBLIC_KEY']) - 8)
 			score = Score(
 				self.config['HOST'],
 				self.config['PORT'],
-				''.join((
-					self.config['PUBLIC_KEY'][key_pos:key_pos + 8],
-					'@',
-					self.config['WALLET']
-				)),
+				''.join((self.invoice(), '@', self.config['WALLET'])),
 				self.config['STRENGTH']
 			)
 			DB.session.add(score)
