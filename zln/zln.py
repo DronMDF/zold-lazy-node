@@ -8,8 +8,9 @@
 ''' Утилита для обслуживания узла '''
 
 from datetime import datetime
-import sys
 import random
+import sys
+import time
 import requests
 from zold.score import JsonScore, MinedScore
 
@@ -23,23 +24,22 @@ def main(argv):
 		if reply.status_code != 200:
 			raise RuntimeError("Ошибка получения информации")
 
-		# @todo #81 Если сервер считает, что майнить нечего -
-		#  он возвращает пустой список.
-		#  Майнер должен уходить в спячку в этом случае...
-		#  Тут можно заложиться на время текущего score,
-		#  и проснуться через двенадцать часов от активного.
-		json_score = random.choice(reply.json().get('farm', {}).get('current', []))
-		start_time = datetime.now()
-		suffix = MinedScore(
-			JsonScore(json_score),
-			{'STRENGTH': json_score['strength']}
-		).suffixes()[-1]
-		end_time = datetime.now()
-		print("Mined: %s take %.2f sec" % (
-			suffix,
-			(end_time - start_time).total_seconds()
-		))
-		requests.post(url + '/score', json={'suffix': suffix})
+		json_scores = reply.json().get('farm', {}).get('current', [])
+		if json_scores:
+			json_score = random.choice(json_scores)
+			start_time = datetime.now()
+			suffix = MinedScore(
+				JsonScore(json_score),
+				{'STRENGTH': json_score['strength']}
+			).suffixes()[-1]
+			end_time = datetime.now()
+			print("Mined: %s take %.2f sec" % (
+				suffix,
+				(end_time - start_time).total_seconds()
+			))
+			requests.post(url + '/score', json={'suffix': suffix})
+		else:
+			time.sleep(60)
 
 
 main(sys.argv)
