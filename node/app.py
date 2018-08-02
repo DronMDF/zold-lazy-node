@@ -103,10 +103,13 @@ def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	try:
 		data = {
-			'version': APP.config['ZOLD_VERSION'],
 			'protocol': '1',
+			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': DbWallet(wallet_id).body()
+			'body': DbWallet(wallet_id).body(),
+			'score': StrongestScore(
+				AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+			).json()
 		}
 	except RuntimeError:
 		data = {}
