@@ -15,6 +15,10 @@
   copy:
     src: gunicorn.conf
     dest: /etc/tmpfiles.d/
+- name: create gunicorn socket directory
+  file:
+    path: /run/gunicorn
+    state: directory
 - name: Restart gunicorn
   systemd:
     name: gunicorn
