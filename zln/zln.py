@@ -41,8 +41,8 @@ def main(argv):
 				requests.post(url + '/score', json={'suffix': suffix})
 			else:
 				time.sleep(60)
-		except Exception as e:
-			print(e)
+		except Exception as exc:
+			print(exc)
 
 
 main(sys.argv)
