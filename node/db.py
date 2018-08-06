@@ -43,6 +43,25 @@ class Suffix(DB.Model):
 		self.score_id = score_id
 
 
+class Remote(DB.Model):
+	'''
+	Узел сети
+	Узел довольно таки похож на Score,
+	только содержит больше полей и ведет себя по другому.
+	В случае прихода новой информации - узел обновляется.
+	'''
+	id = DB.Column(DB.Integer, primary_key=True)
+	time = DB.Column(DB.DateTime)
+	host = DB.Column(DB.String(64))
+	port = DB.Column(DB.Integer)
+	invoice = DB.Column(DB.String(64))
+	score_value = DB.Column(DB.Integer)
+
+	def __init__(self, host, port):
+		self.host = host
+		self.port = port
+
+
 class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)

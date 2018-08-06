@@ -9,7 +9,14 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import StrongestScore, NextScore, ScoreValid, WeakScores
+from zold.score import (
+	NextScore,
+	ScoreValid,
+	ScoreValue,
+	StringScore,
+	StrongestScore,
+	WeakScores
+)
 from node.db import DB
 from node.score import (
 	AtLeastOneDbScores,
@@ -18,6 +25,7 @@ from node.score import (
 	DbNewerThenScores
 )
 from node.wallet import DbWallet
+from node.remote import IsRemoteUpdated
 
 
 class JsonResponse(Response):
@@ -48,6 +56,11 @@ def after_request(response):
 def api_root():
 	''' Статус ноды '''
 	# @todo #66 Старые Score необходимо поудалять из БД
+	if 'X-Zold-Score' in request.headers:
+		score = StringScore(request.headers['X-Zold-Score'], APP.config)
+		if int(ScoreValue(score, APP.config)) >= 3:
+			if not IsRemoteUpdated(score, APP.config):
+				raise RuntimeError('Unable to update remote by score')
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
 		'score': StrongestScore(

@@ -36,3 +36,19 @@ class NowTime:
 	def as_datetime(self):
 		''' Вернуть дату в формате datetime '''
 		return self.time.as_datetime()
+
+
+class StringTime:
+	''' Работа с временем в виде строки '''
+	def __init__(self, time):
+		self.time = time
+
+	def __str__(self):
+		return self.time
+
+	def as_datetime(self):
+		''' Конвертация строки в datetime (Зона UTC) '''
+		return datetime.strptime(
+			self.time,
+			'%Y-%m-%dT%H:%M:%SZ'
+		).replace(tzinfo=timezone.utc)
