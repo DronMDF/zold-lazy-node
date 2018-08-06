@@ -20,26 +20,29 @@ def main(argv):
 	url = 'http://%s:%s' % tuple(argv[1:3])
 
 	while True:
-		reply = requests.get(url)
-		if reply.status_code != 200:
-			raise RuntimeError("Ошибка получения информации")
+		try:
+			reply = requests.get(url)
+			if reply.status_code != 200:
+				raise RuntimeError("Ошибка получения информации")
 
-		json_scores = reply.json().get('farm', {}).get('current', [])
-		if json_scores:
-			json_score = random.choice(json_scores)
-			start_time = datetime.now()
-			suffix = MinedScore(
-				JsonScore(json_score),
-				{'STRENGTH': json_score['strength']}
-			).suffixes()[-1]
-			end_time = datetime.now()
-			print("Mined: %s take %.2f sec" % (
-				suffix,
-				(end_time - start_time).total_seconds()
-			))
-			requests.post(url + '/score', json={'suffix': suffix})
-		else:
-			time.sleep(60)
+			json_scores = reply.json().get('farm', {}).get('current', [])
+			if json_scores:
+				json_score = random.choice(json_scores)
+				start_time = datetime.now()
+				suffix = MinedScore(
+					JsonScore(json_score),
+					{'STRENGTH': json_score['strength']}
+				).suffixes()[-1]
+				end_time = datetime.now()
+				print("Mined: %s take %.2f sec" % (
+					suffix,
+					(end_time - start_time).total_seconds()
+				))
+				requests.post(url + '/score', json={'suffix': suffix})
+			else:
+				time.sleep(60)
+		except Exception as exc:
+			print(exc)
 
 
 main(sys.argv)
