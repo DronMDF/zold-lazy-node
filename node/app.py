@@ -88,14 +88,16 @@ def api_score():
 @APP.route('/remotes', methods=['GET'])
 def api_remotes():
 	''' Список известных и проверенных нод '''
-	data = {
+	return {
 		'version': APP.config['ZOLD_VERSION'],
 		'all': [
 			{'host': 'b2.zold.io', 'port': 4096, 'score': 0},
 			{'host': 'b1.zold.io', 'port': 80, 'score': 0}
-		]
+		],
+		'score': StrongestScore(
+			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+		).json()
 	}
-	return data
 
 
 @APP.route('/wallet/<wallet_id>', methods=['GET'])
