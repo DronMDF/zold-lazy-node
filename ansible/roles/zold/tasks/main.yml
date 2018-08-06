@@ -16,12 +16,20 @@
     executable: pip3
 - name: Copy zold sources
   copy:
+    src: "{{playbook_dir}}/../zold"
+    dest: "{{project_dir}}/"
+    mode: u=rw,g=r,o=r
+- name: Copy node sources
+  # @todo #40 Необходимо проигнорировать файл config.py,
+  #  чтобы каждый деплой не обновлял настройки,
+  #  можно сделать для конфиги отдельный модуль и не деплоить его из git
+  # @todo #40 Необходимо проигнорировать файл test.db,
+  copy:
     src: "{{playbook_dir}}/../node"
     dest: "{{project_dir}}/"
     mode: u=rw,g=r,o=r
-# @todo #16 Для продакшина необходима конфигурация.
-#- name: Copy zold settings
-#  template: "src=roles/zold/templates/config.j2 dest={{project_dir}}/{{project_name}}/zold/config.py"
+- name: Copy zold settings
+  template: "src=roles/zold/templates/config.j2 dest={{project_dir}}/node/config.py"
 - name: Project dir permission
   file:
     path: "{{project_dir}}"
