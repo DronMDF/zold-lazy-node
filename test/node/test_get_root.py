@@ -25,7 +25,7 @@ class TestGetRoot:
 		'''
 		APP.test_client().get(
 			'/',
-			headers={'X-Zold-Score': str(FakeScore(3, {'STRENGTH': 1}))}
+			headers={'X-Zold-Score': str(FakeScore(3, {'STRENGTH': 3}))}
 		)
 		response = APP.test_client().get('/remotes')
 		print(response.json)

@@ -25,16 +25,17 @@ from node.score import (
 	DbNewerThenScores
 )
 from node.wallet import DbWallet
-from node.remote import IsRemoteUpdated
+from node.remote import DbRemotes, IsRemoteUpdated
 
 
 class JsonResponse(Response):
 	''' Возвращаем JSON '''
 	@classmethod
 	def force_type(cls, response, environ=None):
+		''' Формируем ответ сервера'''
 		if isinstance(response, dict):
 			response = jsonify(response)
-		return super(JsonResponse, cls).force_type(response, environ)
+		return super().force_type(response, environ)
 
 
 APP = Flask(__name__)
@@ -103,10 +104,8 @@ def api_remotes():
 	''' Список известных и проверенных нод '''
 	return {
 		'version': APP.config['ZOLD_VERSION'],
-		'all': [
-			{'host': 'b2.zold.io', 'port': 4096, 'score': 0},
-			{'host': 'b1.zold.io', 'port': 80, 'score': 0}
-		],
+		# @todo #105 Нужно выбрать только актуальные Remote (последних суток)
+		'all': [r.json() for r in DbRemotes()],
 		'score': StrongestScore(
 			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json()

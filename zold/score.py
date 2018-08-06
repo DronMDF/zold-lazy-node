@@ -41,7 +41,7 @@ class StringScore:
 		return {
 			'time': parts[0],
 			'host': parts[1],
-			'port': parts[2],
+			'port': int(parts[2]),
 			'invoice': parts[3],
 			'suffixes': parts[4:],
 			'strength': self.config['STRENGTH']
@@ -153,6 +153,9 @@ class MinedScore:
 	def suffixes(self):
 		''' Суффиксы на один длиннее, чем были '''
 		return self.score.suffixes() + [self.new_suffix()]
+
+	def __str__(self):
+		return str(self.score) + ' ' + self.new_suffix()
 
 	def json(self):
 		''' Новый core в виде json '''

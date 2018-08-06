@@ -11,6 +11,29 @@ from zold.score import ScoreValue
 from node.db import DB, Remote
 
 
+class DbRemote:
+	''' Одиночный узел сети '''
+	def __init__(self, remote):
+		self.record = remote
+
+	def json(self):
+		''' В виде json '''
+		return {
+			'host': self.record.host,
+			'port': self.record.port,
+			'score': self.record.score_value
+		}
+
+
+class DbRemotes:
+	''' Полный список узлов сети '''
+	def __iter__(self):
+		return (DbRemote(s) for s in Remote.query.all())
+
+	def __bool__(self):
+		return Remote.query.count() != 0
+
+
 class IsRemoteUpdated:
 	''' Обновление информации об узле в БД '''
 	def __init__(self, score, config):
