@@ -56,12 +56,14 @@ def after_request(response):
 @APP.route('/', methods=['GET'])
 def api_root():
 	''' Статус ноды '''
-	# @todo #66 Старые Score необходимо поудалять из БД
+	# @todo #105 в случае некорректного формата X-Zold-Score
+	#  не происходит сообщения об ошибке
 	if 'X-Zold-Score' in request.headers:
 		score = StringScore(request.headers['X-Zold-Score'], APP.config)
 		if int(ScoreValue(score, APP.config)) >= 3:
 			if not IsRemoteUpdated(score, APP.config):
 				raise RuntimeError('Unable to update remote by score')
+	# @todo #66 Старые Score необходимо поудалять из БД
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
 		'score': StrongestScore(
