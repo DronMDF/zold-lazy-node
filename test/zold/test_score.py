@@ -18,6 +18,8 @@ from zold.score import (
 )
 
 
+# @todo #105 Необходимо иметь возможность создавать Score
+#  с необходимыми параметрами и актуальной датой
 class FakeScore:
 	''' Тестовый score, он имеет необходимое количество суффиксов '''
 	def __init__(self, value, config):
@@ -29,7 +31,7 @@ class FakeScore:
 			)
 		else:
 			self.score = StringScore(
-				'2018-06-20T20:01:32Z 1127.0.0.1 4096 2X8kfnzk@9a856dac7d475014',
+				'2018-06-20T20:01:32Z 127.0.0.1 4096 2X8kfnzk@9a856dac7d475014',
 				config
 			)
 

@@ -9,7 +9,14 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import StrongestScore, NextScore, ScoreValid, WeakScores
+from zold.score import (
+	NextScore,
+	ScoreValid,
+	ScoreValue,
+	StringScore,
+	StrongestScore,
+	WeakScores
+)
 from node.db import DB
 from node.score import (
 	AtLeastOneDbScores,
@@ -18,15 +25,17 @@ from node.score import (
 	DbNewerThenScores
 )
 from node.wallet import DbWallet
+from node.remote import DbRemotes, IsRemoteUpdated
 
 
 class JsonResponse(Response):
 	''' Возвращаем JSON '''
 	@classmethod
 	def force_type(cls, response, environ=None):
+		''' Формируем ответ сервера'''
 		if isinstance(response, dict):
 			response = jsonify(response)
-		return super(JsonResponse, cls).force_type(response, environ)
+		return super().force_type(response, environ)
 
 
 APP = Flask(__name__)
@@ -47,6 +56,13 @@ def after_request(response):
 @APP.route('/', methods=['GET'])
 def api_root():
 	''' Статус ноды '''
+	# @todo #105 в случае некорректного формата X-Zold-Score
+	#  не происходит сообщения об ошибке
+	if 'X-Zold-Score' in request.headers:
+		score = StringScore(request.headers['X-Zold-Score'], APP.config)
+		if int(ScoreValue(score, APP.config)) >= 3:
+			if not IsRemoteUpdated(score, APP.config):
+				raise RuntimeError('Unable to update remote by score')
 	# @todo #66 Старые Score необходимо поудалять из БД
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
@@ -90,10 +106,8 @@ def api_remotes():
 	''' Список известных и проверенных нод '''
 	return {
 		'version': APP.config['ZOLD_VERSION'],
-		'all': [
-			{'host': 'b2.zold.io', 'port': 4096, 'score': 0},
-			{'host': 'b1.zold.io', 'port': 80, 'score': 0}
-		],
+		# @todo #105 Нужно выбрать только актуальные Remote (последних суток)
+		'all': [r.json() for r in DbRemotes()],
 		'score': StrongestScore(
 			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
 		).json()
