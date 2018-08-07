@@ -52,6 +52,8 @@ class FakeScore:
 
 
 class TestJsonScore:
+	''' Тестирование JsonScore'''
+
 	FULL = {
 		'host': '185.180.196.2',
 		'port': 4096,
@@ -68,7 +70,6 @@ class TestJsonScore:
 		"suffixes": []
 	}
 
-	''' JsonScore тесты '''
 	def test_as_string(self):
 		''' Проверяем, как JsonScore превращается в строку '''
 		assert str(JsonScore(self.FULL)) == (
@@ -96,6 +97,7 @@ class TestJsonScore:
 
 
 class TestStrongestScore:
+	''' Выбирает самый сильный Score из указанных '''
 	STRONGEST = {
 		'host': '185.180.196.2',
 		'port': 4096,
@@ -113,6 +115,7 @@ class TestStrongestScore:
 	}
 
 	def test_json(self):
+		''' Тестируем выбор правильного core '''
 		score = StrongestScore(
 			[JsonScore(self.EMPTY), JsonScore(self.STRONGEST)],
 			{'STRENGTH': 6}
@@ -121,12 +124,15 @@ class TestStrongestScore:
 
 
 class TestWeakScores:
+	''' Тестирование списка Score, которые нуждаются в прокачке '''
 	config = {'STRENGTH': 1}
 
 	def test_empty(self):
+		''' Проверка пустого списка '''
 		assert not WeakScores([], 16, self.config)
 
 	def test_weak(self):
+		''' Проверка слабых score '''
 		assert [
 			int(ScoreValue(s, self.config))
 			for s in WeakScores(
@@ -144,6 +150,7 @@ class TestWeakScores:
 
 
 class TestScoreHash:
+	''' Тесты на ScoreHash '''
 	FULL = {
 		'host': '185.180.196.2',
 		'port': 4096,
@@ -161,11 +168,13 @@ class TestScoreHash:
 	}
 
 	def test_empty_hash(self):
+		''' Тест на хеш пустого Score, а хеш у него - префиксная часть '''
 		assert str(ScoreHash(JsonScore(self.EMPTY), {'STRENGTH': 6})) == (
 			'2018-06-20T20:01:32Z 178.128.169.239 4096 Rg3XJle8@48b368ce23ed97fe'
 		)
 
 	def test_full_hash(self):
+		''' Тест ха хеш полного score'''
 		assert str(ScoreHash(JsonScore(self.FULL), {'STRENGTH': 6})) == (
 			'b7948e996c6765c1d625dafbb6d3aa5fabddc7232cdec19430c8d0960e000000'
 		)
