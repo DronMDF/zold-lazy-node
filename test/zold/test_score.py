@@ -6,9 +6,11 @@
 
 ''' Score '''
 
+from datetime import datetime, timezone
 from zold.score import (
 	JsonScore,
 	MinedScore,
+	NewerThenScores,
 	ScoreHash,
 	ScoreValid,
 	ScoreValue,
@@ -16,6 +18,7 @@ from zold.score import (
 	StrongestScore,
 	WeakScores
 )
+from zold.time import DatetimeTime
 
 
 # @todo #105 Необходимо иметь возможность создавать Score
@@ -147,6 +150,26 @@ class TestWeakScores:
 				self.config
 			)
 		] == [2, 1, 0]
+
+
+class TestNewerThenScores:
+	''' Тестирование списка Score, позднее указанной временнОй точки '''
+	config = {'STRENGTH': 1}
+
+	def test_newer(self):
+		''' проверка фильтра '''
+		score = StringScore(
+			'2018-08-06T06:45:48Z 37.230.116.39 4096 HdssRDl6@cc53e22229564de6',
+			self.config
+		)
+		assert len(NewerThenScores(
+			[score],
+			DatetimeTime(datetime(2018, 8, 6, 6, 45, 45, timezone.utc))
+		)) == 1
+		assert list(NewerThenScores(
+			[score],
+			DatetimeTime(datetime(2018, 8, 6, 6, 45, 54, timezone.utc))
+		))
 
 
 class TestScoreHash:

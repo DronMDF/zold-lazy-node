@@ -185,6 +185,19 @@ class WeakScores:
 		))
 
 
+class NewerThenScores:
+	'''
+	Фильтрованный список содержащий только score
+	поднее указанного момента времени
+	'''
+	def __init__(self, scores, time):
+		self.scores = scores
+		self.time = time
+
+	def __iter__(self):
+		pass
+
+
 class ScoreValue:
 	''' Количество валидных суффиксов - это значение Score '''
 	def __init__(self, score, config):
