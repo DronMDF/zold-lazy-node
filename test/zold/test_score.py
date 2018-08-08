@@ -156,11 +156,11 @@ class TestNewerThenScores:
 		)
 		assert len(NewerThenScores(
 			[score],
-			DatetimeTime(datetime(2018, 8, 6, 6, 45, 45, timezone.utc))
+			DatetimeTime(datetime(2018, 8, 6, 6, 45, 45, tzinfo=timezone.utc))
 		)) == 1
 		assert list(NewerThenScores(
 			[score],
-			DatetimeTime(datetime(2018, 8, 6, 6, 45, 54, timezone.utc))
+			DatetimeTime(datetime(2018, 8, 6, 6, 45, 54, tzinfo=timezone.utc))
 		))
 
 
