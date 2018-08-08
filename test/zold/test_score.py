@@ -7,17 +7,9 @@
 ''' Score '''
 
 from datetime import datetime, timezone
-from zold.score import (
-	JsonScore,
-	MinedScore,
-	NewerThenScores,
-	ScoreHash,
-	ScoreValid,
-	ScoreValue,
-	StringScore,
-	StrongestScore,
-	WeakScores
-)
+from zold.score import JsonScore, MinedScore, StringScore, StrongestScore
+from zold.scores import NewerThenScores, WeakScores
+from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import DatetimeTime
 
 

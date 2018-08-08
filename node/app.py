@@ -9,14 +9,9 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import (
-	NextScore,
-	ScoreValid,
-	ScoreValue,
-	StringScore,
-	StrongestScore,
-	WeakScores
-)
+from zold.score import NextScore, StringScore, StrongestScore
+from zold.scores import WeakScores
+from zold.score_props import ScoreValid, ScoreValue
 from node.db import DB
 from node.score import (
 	AtLeastOneDbScores,
