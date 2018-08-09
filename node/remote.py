@@ -7,7 +7,7 @@
 ''' Работа с узлами сети '''
 
 from zold.time import StringTime
-from zold.score import ScoreValue
+from zold.score_props import ScoreValue
 from node.db import DB, Remote
 
 

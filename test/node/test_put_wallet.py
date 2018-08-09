@@ -7,7 +7,8 @@
 ''' Тестирование Работы с кошельками '''
 
 from node.app import APP
-from zold.score import JsonScore, ScoreValid
+from zold.score import JsonScore
+from zold.score_props import ScoreValid
 
 
 class TestPutWallet:

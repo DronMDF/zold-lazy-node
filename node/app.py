@@ -9,21 +9,12 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import (
-	NextScore,
-	ScoreValid,
-	ScoreValue,
-	StringScore,
-	StrongestScore,
-	WeakScores
-)
+from zold.score import NextScore, StringScore, StrongestScore
+from zold.scores import WeakScores, NewerThenScores
+from zold.score_props import ScoreValid, ScoreValue
+from zold.time import AheadTime
 from node.db import DB
-from node.score import (
-	AtLeastOneDbScores,
-	DbActualScores,
-	DbSavedScore,
-	DbNewerThenScores
-)
+from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
 from node.wallet import DbWallet
 from node.remote import DbRemotes, IsRemoteUpdated
 
@@ -67,13 +58,17 @@ def api_root():
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
 		'score': StrongestScore(
-			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+			APP.config
 		).json(),
 		'farm': {
 			'current': [
 				s.json()
 				for s in WeakScores(
-					AtLeastOneDbScores(DbNewerThenScores(hours=12), APP.config),
+					AtLeastOneDbScores(
+						NewerThenScores(DbScores(), AheadTime(12)),
+						APP.config
+					),
 					16,
 					APP.config
 				)
@@ -91,7 +86,10 @@ def api_score():
 		raise BadRequest("Bad request")
 	score = next((
 		p
-		for p in (NextScore(s, suffix) for s in DbActualScores())
+		for p in (
+			NextScore(s, suffix)
+			for s in NewerThenScores(DbScores(), AheadTime(24))
+		)
 		if ScoreValid(p, APP.config)
 	), None)
 	if score is None:
@@ -109,7 +107,8 @@ def api_remotes():
 		# @todo #105 Нужно выбрать только актуальные Remote (последних суток)
 		'all': [r.json() for r in DbRemotes()],
 		'score': StrongestScore(
-			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+			APP.config
 		).json()
 	}
 
@@ -124,7 +123,8 @@ def api_get_wallet(wallet_id):
 			'id': wallet_id,
 			'body': DbWallet(wallet_id).body(),
 			'score': StrongestScore(
-				AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+				APP.config
 			).json()
 		}
 	except RuntimeError:
@@ -144,7 +144,8 @@ def api_put_wallet(wallet_id):
 		'protocol': '1',
 		'id': wallet_id,
 		'score': StrongestScore(
-			AtLeastOneDbScores(DbActualScores(), APP.config), APP.config
+			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+			APP.config
 		).json()
 	}
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.

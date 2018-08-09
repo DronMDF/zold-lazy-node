@@ -6,7 +6,7 @@
 
 
 ''' Работа с датами в формате UTC '''
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 class DatetimeTime:
@@ -29,6 +29,21 @@ class NowTime:
 	''' Текущее время '''
 	def __init__(self):
 		self.time = DatetimeTime(datetime.now(timezone.utc).replace(microsecond=0))
+
+	def __str__(self):
+		return str(self.time)
+
+	def as_datetime(self):
+		''' Вернуть дату в формате datetime '''
+		return self.time.as_datetime()
+
+
+class AheadTime:
+	''' Момент времени из прошлого (на сколько часов назад) '''
+	def __init__(self, hours):
+		self.time = DatetimeTime(
+			datetime.now(timezone.utc).replace(microsecond=0) - timedelta(hours=hours)
+		)
 
 	def __str__(self):
 		return str(self.time)
