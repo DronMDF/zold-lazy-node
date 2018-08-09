@@ -51,3 +51,9 @@ class NewerThenScores:
 			for s in self.scores
 			if StringTime(s.json()['time']).as_datetime() >= self.time.as_datetime()
 		))
+
+	def __bool__(self):
+		return any((
+			StringTime(s.json()['time']).as_datetime() >= self.time.as_datetime()
+			for s in self.scores
+		))
