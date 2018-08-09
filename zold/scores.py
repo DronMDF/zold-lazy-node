@@ -10,6 +10,7 @@
 '''
 
 from .score_props import ScoreValue
+from .time import StringTime
 
 
 class WeakScores:
@@ -43,4 +44,8 @@ class NewerThenScores:
 		self.time = time
 
 	def __iter__(self):
-		pass
+		yield from ((
+			s
+			for s in self.scores
+			if StringTime(s.json()['time']).as_datetime() >= self.time.as_datetime()
+		))

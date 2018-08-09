@@ -6,11 +6,8 @@
 
 ''' Score '''
 
-from datetime import datetime, timezone
 from zold.score import JsonScore, MinedScore, StringScore, StrongestScore
-from zold.scores import NewerThenScores, WeakScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
-from zold.time import DatetimeTime
 
 
 # @todo #105 Необходимо иметь возможность создавать Score
@@ -116,52 +113,6 @@ class TestStrongestScore:
 			{'STRENGTH': 6}
 		)
 		assert score.json()['invoice'] == '2X8kfnzk@9a856dac7d475014'
-
-
-class TestWeakScores:
-	''' Тестирование списка Score, которые нуждаются в прокачке '''
-	config = {'STRENGTH': 1}
-
-	def test_empty(self):
-		''' Проверка пустого списка '''
-		assert not WeakScores([], 16, self.config)
-
-	def test_weak(self):
-		''' Проверка слабых score '''
-		assert [
-			int(ScoreValue(s, self.config))
-			for s in WeakScores(
-				[
-					FakeScore(4, self.config),
-					FakeScore(3, self.config),
-					FakeScore(2, self.config),
-					FakeScore(1, self.config),
-					FakeScore(0, self.config)
-				],
-				3,
-				self.config
-			)
-		] == [2, 1, 0]
-
-
-class TestNewerThenScores:
-	''' Тестирование списка Score, позднее указанной временнОй точки '''
-	config = {'STRENGTH': 1}
-
-	def test_newer(self):
-		''' проверка фильтра '''
-		score = StringScore(
-			'2018-08-06T06:45:48Z 37.230.116.39 4096 HdssRDl6@cc53e22229564de6',
-			self.config
-		)
-		assert len(NewerThenScores(
-			[score],
-			DatetimeTime(datetime(2018, 8, 6, 6, 45, 45, tzinfo=timezone.utc))
-		)) == 1
-		assert list(NewerThenScores(
-			[score],
-			DatetimeTime(datetime(2018, 8, 6, 6, 45, 54, tzinfo=timezone.utc))
-		))
 
 
 class TestScoreHash:
