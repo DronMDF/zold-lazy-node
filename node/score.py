@@ -8,7 +8,6 @@
 ''' Score из БД'''
 import re
 from random import randint
-from datetime import datetime, timedelta
 from node.db import DB, Score, Suffix
 from zold.time import DatetimeTime
 
@@ -90,26 +89,6 @@ class DbScores:
 
 	def __bool__(self):
 		return Score.query.count() != 0
-
-
-class DbNewerThenScores:
-	''' Список Score из БД новее указанного интервала '''
-	def __init__(self, hours):
-		self.interval = timedelta(hours=hours)
-
-	def __iter__(self):
-		since = datetime.now() - self.interval
-		return (DbScore(s) for s in Score.query.filter(Score.time >= since))
-
-	def __bool__(self):
-		since = datetime.now() - self.interval
-		return Score.query.filter(Score.time >= since).count() != 0
-
-
-class DbActualScores(DbNewerThenScores):
-	''' Список Score из БД которые созданы в течении последних суток'''
-	def __init__(self):
-		super().__init__(hours=24)
 
 
 class AtLeastOneDbScores:

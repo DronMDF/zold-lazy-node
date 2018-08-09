@@ -44,6 +44,8 @@ class NewerThenScores:
 		self.time = time
 
 	def __iter__(self):
+		# @todo #101 Есть определенные проблемы с извлечением параметров Score.
+		#  Будет правильно, если prefix - будет объектом.
 		yield from ((
 			s
 			for s in self.scores
