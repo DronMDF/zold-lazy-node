@@ -12,7 +12,37 @@ import random
 import sys
 import time
 import requests
-from zold.score import JsonScore, MinedScore
+from zold.score import JsonScore, StringScore, MinedScore
+from zold.score_props import ScoreValid, ScoreValue
+
+
+def update_remotes(url):
+	reply = requests.get(url)
+	if reply.status_code != 200:
+		raise RuntimeError("Ошибка получения информации")
+	score = JsonScore(reply.json()['score'])
+	config = {'STRENGTH': score.json()['strength']}
+
+	todo = {'b2.zold.io:4096'}
+	done = set()
+	while todo:
+		host = random.choice(list(todo))
+		print("Select %s for update" % host)
+		done.add(host)
+		todo.remove(host)
+		rremote = requests.get('http://%s/remotes' % host)
+		rscore = StringScore(rremote.headers['X-Zold-Score'], config)
+		print("Remote score: %s" % str(rscore))
+		print(bool(ScoreValid(rscore, config)))
+		print(int(ScoreValue(rscore, config)))
+		if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
+			print("Update remotes from %s" % host);
+			for r in rremote.json()['all']:
+				rhost = '%s:%u' % (r['host'], r['port'])
+				if rhost not in done:
+					todo.add(rhost)
+		else:
+			print("Low Score")
 
 
 def main(argv):
@@ -40,9 +70,14 @@ def main(argv):
 				))
 				requests.post(url + '/score', json={'suffix': suffix})
 			else:
+				# @todo #107 Режимы zln в командной строке
+				#  Необходимо ввести аргументы командной строки, чтобы
+				#  выбирать объем функционала, который мы хотим активировать.
+				update_remotes(url)
 				time.sleep(60)
 		except Exception as exc:
 			print(exc)
+			time.sleep(60)
 
 
 main(sys.argv)
