@@ -90,12 +90,24 @@ class StrongestScore:
 		self.scores = scores
 		self.config = config
 
+	def score(self):
+		''' Фукнция возвращаем максимальный score '''
+		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config)))
+
 	def __str__(self):
-		return str(max(self.scores, key=lambda s: int(ScoreValue(s, self.config))))
+		return str(self.score())
 
 	def json(self):
 		''' В виде json '''
-		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config))).json()
+		return self.score().json()
+
+	def prefix(self):
+		''' Префиксная часть score '''
+		return self.score().prefix()
+
+	def suffixes(self):
+		''' список суффиксов '''
+		return self.score().suffixes()
 
 
 # @todo #51 ротестировать NextScore
