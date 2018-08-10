@@ -20,6 +20,7 @@ score.expired() - устарел
 
 import hashlib
 import random
+import re
 import base58
 from .score_props import ScoreHash, ScoreValue
 
@@ -163,3 +164,33 @@ class MinedScore:
 		json = self.score.json()
 		json['suffixes'].append(self.new_suffix())
 		return json
+
+
+class XZoldScore:
+	''' Score, который используется в заголовке '''
+	def __init__(self, score):
+		self.xscore = score
+
+	def score(self):
+		''' Формируем строковую Score, и работаем через нее '''
+		reg = re.match(r'\d+/(\d+): (.*)', self.xscore)
+		return StringScore(reg.group(2), {'STRENGTH': reg.group(1)})
+
+	def __str__(self):
+		'''
+		Не смотря на то, что X-Zold-Score имеет дополнительные поля,
+		этот метод возвращает чистый Score в виде строки
+		'''
+		return str(self.score())
+
+	def json(self):
+		''' json достаем через StringScore '''
+		return self.score().json()
+
+	def prefix(self):
+		''' Префикс достаем через StringScore '''
+		return self.score().prefix()
+
+	def suffixes(self):
+		''' Суффиксы достаем через StringScore '''
+		return self.score().suffixes()
