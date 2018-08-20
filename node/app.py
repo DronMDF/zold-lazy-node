@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import NextScore, StringScore, StrongestScore
+from zold.score import NextScore, StrongestScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreValid, ScoreValue
 from zold.time import AheadTime
@@ -40,7 +40,19 @@ with APP.app_context():
 @APP.after_request
 def after_request(response):
 	''' Добавляем кастомный HTTP заголовок '''
+	score = StrongestScore(
+		AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+		APP.config
+	)
 	response.headers.add('X-Zold-Version', APP.config['ZOLD_VERSION'])
+	response.headers.add(
+		'X-Zold-Score',
+		'%u/%u: %s' % (
+			ScoreValue(score, APP.config),
+			APP.config['STRENGTH'],
+			score
+		)
+	)
 	return response
 
 
@@ -50,7 +62,7 @@ def api_root():
 	# @todo #105 в случае некорректного формата X-Zold-Score
 	#  не происходит сообщения об ошибке
 	if 'X-Zold-Score' in request.headers:
-		score = StringScore(request.headers['X-Zold-Score'], APP.config)
+		score = XZoldScore(request.headers['X-Zold-Score'])
 		if int(ScoreValue(score, APP.config)) >= 3:
 			if not IsRemoteUpdated(score, APP.config):
 				raise RuntimeError('Unable to update remote by score')

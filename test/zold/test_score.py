@@ -6,7 +6,14 @@
 
 ''' Score '''
 
-from zold.score import JsonScore, MinedScore, StringScore, StrongestScore
+from zold.score import (
+	JsonScore,
+	MinedScore,
+	StringScore,
+	StrongestScore,
+	XZoldScore
+)
+from zold.score_props import ScoreValue
 
 
 # @todo #105 Необходимо иметь возможность создавать Score
@@ -94,3 +101,18 @@ class TestStrongestScore:
 			{'STRENGTH': 6}
 		)
 		assert score.json()['invoice'] == '2X8kfnzk@9a856dac7d475014'
+
+
+class TestXZoldScore:
+	''' Score, который вычитывается из параметров заголовка '''
+	def test_score_value(self):
+		''' Проверяем, что он нормально парсится '''
+		score = XZoldScore(
+			' '.join((
+				'16/6:',
+				'2018-08-09T15:52:58Z b2.zold.io 4096 RJppWlJD@912ecc24b32dbe74',
+				'1999171 15690ff 127ffc9 11c28b 63d071 9431d9 f6fc4b 5f85844',
+				'17200c4 d5f7d7 247a1bf 5abecb 1cc495a 438d7c 11aa923 5ec1d7'
+			))
+		)
+		assert int(ScoreValue(score, {'STRENGTH': 6})) == 16
