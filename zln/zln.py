@@ -12,37 +12,8 @@ import random
 import sys
 import time
 import requests
-from zold.score import JsonScore, StringScore, MinedScore
+from zold.score import JsonScore, MinedScore, XZoldScore
 from zold.score_props import ScoreValid, ScoreValue
-
-
-def update_remotes(url):
-	reply = requests.get(url)
-	if reply.status_code != 200:
-		raise RuntimeError("Ошибка получения информации")
-	score = JsonScore(reply.json()['score'])
-	config = {'STRENGTH': score.json()['strength']}
-
-	todo = {'b2.zold.io:4096'}
-	done = set()
-	while todo:
-		host = random.choice(list(todo))
-		print("Select %s for update" % host)
-		done.add(host)
-		todo.remove(host)
-		rremote = requests.get('http://%s/remotes' % host)
-		rscore = StringScore(rremote.headers['X-Zold-Score'], config)
-		print("Remote score: %s" % str(rscore))
-		print(bool(ScoreValid(rscore, config)))
-		print(int(ScoreValue(rscore, config)))
-		if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
-			print("Update remotes from %s" % host);
-			for r in rremote.json()['all']:
-				rhost = '%s:%u' % (r['host'], r['port'])
-				if rhost not in done:
-					todo.add(rhost)
-		else:
-			print("Low Score")
 
 
 class NRemotes:
@@ -54,16 +25,47 @@ class NRemotes:
 		self.argv = argv
 
 	def __int__(self):
-		pass
+		url = 'http://%s:%s' % tuple(self.argv)
+		reply = requests.get(url)
+		if reply.status_code != 200:
+			raise RuntimeError("Ошибка получения информации")
+		score = JsonScore(reply.json()['score'])
+		config = {'STRENGTH': score.json()['strength']}
+
+		todo = {'b2.zold.io:4096'}
+		done = set()
+		while todo:
+			host = random.choice(list(todo))
+			print(host, "Check...")
+			done.add(host)
+			todo.remove(host)
+			try:
+				rremote = requests.get('http://%s/remotes' % host, timeout=5)
+			except Exception as err:
+				print(host, "Failed:", err)
+				continue
+			rscore = XZoldScore(rremote.headers['X-Zold-Score'])
+			if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
+				print(host, "Get remotes...")
+				for remote in rremote.json()['all']:
+					rhost = '%s:%u' % (remote['host'], remote['port'])
+					if rhost not in done:
+						if rhost not in todo:
+							todo.add(rhost)
+							print(host, "New remote: ", rhost)
+
+			else:
+				print(host, "Low Score")
+		return len(done)
 
 
 def main(argv):
 	''' Основной метод майнера '''
-	if argv[0] == 'propogate':
+	if argv[0] == 'update':
 		return int(NRemotes(argv[1:]))
 
 	# @todo #107: Майнинг необходмо вынести из main
-	url = 'http://%s:%s' % tuple(argv[1:3])
+	url = 'http://%s:%s' % tuple(argv)
 
 	while True:
 		try:
@@ -86,10 +88,6 @@ def main(argv):
 				))
 				requests.post(url + '/score', json={'suffix': suffix})
 			else:
-				# @todo #107 Режимы zln в командной строке
-				#  Необходимо ввести аргументы командной строки, чтобы
-				#  выбирать объем функционала, который мы хотим активировать.
-				update_remotes(url)
 				time.sleep(60)
 		except Exception as exc:
 			print(exc)
