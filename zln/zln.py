@@ -45,8 +45,24 @@ def update_remotes(url):
 			print("Low Score")
 
 
+class NRemotes:
+	'''
+	Количество активных узлов, определяется методом опроса и
+	обновления информации на сервере
+	'''
+	def __init__(self, argv):
+		self.argv = argv
+
+	def __int__(self):
+		pass
+
+
 def main(argv):
 	''' Основной метод майнера '''
+	if argv[0] == 'propogate':
+		return int(NRemotes(argv[1:]))
+
+	# @todo #107: Майнинг необходмо вынести из main
 	url = 'http://%s:%s' % tuple(argv[1:3])
 
 	while True:
@@ -80,4 +96,4 @@ def main(argv):
 			time.sleep(60)
 
 
-main(sys.argv)
+main(sys.argv[1:])
