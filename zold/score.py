@@ -20,6 +20,7 @@ score.expired() - устарел
 
 import hashlib
 import random
+import re
 import base58
 from .score_props import ScoreHash, ScoreValue
 
@@ -89,12 +90,24 @@ class StrongestScore:
 		self.scores = scores
 		self.config = config
 
+	def score(self):
+		''' Фукнция возвращаем максимальный score '''
+		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config)))
+
 	def __str__(self):
-		return str(max(self.scores, key=lambda s: int(ScoreValue(s, self.config))))
+		return str(self.score())
 
 	def json(self):
 		''' В виде json '''
-		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config))).json()
+		return self.score().json()
+
+	def prefix(self):
+		''' Префиксная часть score '''
+		return self.score().prefix()
+
+	def suffixes(self):
+		''' список суффиксов '''
+		return self.score().suffixes()
 
 
 # @todo #51 ротестировать NextScore
@@ -163,3 +176,33 @@ class MinedScore:
 		json = self.score.json()
 		json['suffixes'].append(self.new_suffix())
 		return json
+
+
+class XZoldScore:
+	''' Score, который используется в заголовке '''
+	def __init__(self, score):
+		self.xscore = score
+
+	def score(self):
+		''' Формируем строковую Score, и работаем через нее '''
+		reg = re.match(r'\d+/(\d+): (.*)', self.xscore)
+		return StringScore(reg.group(2), {'STRENGTH': reg.group(1)})
+
+	def __str__(self):
+		'''
+		Не смотря на то, что X-Zold-Score имеет дополнительные поля,
+		этот метод возвращает чистый Score в виде строки
+		'''
+		return str(self.score())
+
+	def json(self):
+		''' json достаем через StringScore '''
+		return self.score().json()
+
+	def prefix(self):
+		''' Префикс достаем через StringScore '''
+		return self.score().prefix()
+
+	def suffixes(self):
+		''' Суффиксы достаем через StringScore '''
+		return self.score().suffixes()
