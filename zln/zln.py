@@ -25,6 +25,7 @@ class NRemotes:
 		self.argv = argv
 
 	def __int__(self):
+		# @todo #107 Функция слишком длинная, необходима реорганизация
 		url = 'http://%s:%s' % tuple(self.argv)
 		reply = requests.get(url)
 		if reply.status_code != 200:
