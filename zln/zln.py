@@ -46,7 +46,13 @@ class NRemotes:
 				continue
 			rscore = XZoldScore(rremote.headers['X-Zold-Score'])
 			if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
-				print(host, "Get remotes...")
+				print(host, "Good host, update and get remotes...")
+				reply = requests.get(
+					url,
+					headers={'X-Zold-Score': rremote.headers['X-Zold-Score']}
+				)
+				if reply.status_code != 200:
+					print(reply)
 				for remote in rremote.json()['all']:
 					rhost = '%s:%u' % (remote['host'], remote['port'])
 					if rhost not in done:
