@@ -41,7 +41,17 @@ class NRemotes:
 			done.add(host)
 			todo.remove(host)
 			try:
-				rremote = requests.get('http://%s/remotes' % host, timeout=5)
+				rremote = requests.get(
+					'http://%s/remotes' % host,
+					timeout=5,
+					headers={
+						'X-Zold-Score': '%u/%u %s' % (
+							ScoreValue(score, config),
+							config['STRENGTH'],
+							str(score)
+						)
+					}
+				)
 			except Exception as err:
 				print(host, "Failed:", err)
 				continue
