@@ -35,9 +35,7 @@ class XZoldRequestScore:
 				'%x' % int(StringTime(jscore['time']).as_datetime().timestamp()),
 				jscore['host'],
 				'%x' % jscore['port']
-			] +
-			list(jscore['invoice'].split('@')) +
-			jscore['suffixes']
+			] + list(jscore['invoice'].split('@')) + jscore['suffixes']
 		)
 
 
