@@ -14,6 +14,31 @@ import time
 import requests
 from zold.score import JsonScore, MinedScore, XZoldScore
 from zold.score_props import ScoreValid, ScoreValue
+from zold.time import StringTime
+
+
+class XZoldRequestScore:
+	'''
+	Почему-то на выход Score нужно посылать в другом формате
+	Это странно и не логично, но так.
+	Я написал багу, но не хочу ждать когда ее исправят.
+	Поэтому эмулируем этот кривой формат
+	'''
+	def __init__(self, score):
+		self.score = score
+
+	def __str__(self):
+		jscore = self.score.json()
+		return ' '.join(
+			[
+				str(jscore['strength']),
+				'%x' % int(StringTime(jscore['time']).as_datetime().timestamp()),
+				jscore['host'],
+				'%x' % jscore['port']
+			] +
+			list(jscore['invoice'].split('@')) +
+			jscore['suffixes']
+		)
 
 
 class NRemotes:
@@ -45,11 +70,9 @@ class NRemotes:
 					'http://%s/remotes' % host,
 					timeout=5,
 					headers={
-						'X-Zold-Score': '%u/%u %s' % (
-							ScoreValue(score, config),
-							config['STRENGTH'],
-							str(score)
-						)
+						# @todo #88 Формат score отправку отличается от реплайного
+						#  Необходимо убрать, когда исправят багу в zold
+						'X-Zold-Score': str(XZoldRequestScore(score))
 					}
 				)
 			except Exception as err:
