@@ -66,7 +66,7 @@ class NRemotes:
 			try:
 				rremote = requests.get(
 					'http://%s/remotes' % host,
-					timeout=5,
+					timeout=30,
 					headers={
 						# @todo #88 Формат score отправку отличается от реплайного
 						#  Необходимо убрать, когда исправят багу в zold
