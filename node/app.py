@@ -90,6 +90,12 @@ def api_root():
 	return data
 
 
+@APP.route('/version', methods=['GET'])
+def api_version():
+	''' версия ноды '''
+	return APP.config['ZOLD_VERSION']
+
+
 @APP.route('/score', methods=['POST'])
 def api_score():
 	''' Загрузка суффиксов на сервер '''
