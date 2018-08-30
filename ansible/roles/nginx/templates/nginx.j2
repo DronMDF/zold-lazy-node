@@ -7,6 +7,7 @@ server {
 	error_log error.log;
 	location / {
 		include proxy_params;
+		add_header Access-Control-Allow-Origin *;
 		proxy_pass http://unix:/run/gunicorn/socket;
 	}
 }
