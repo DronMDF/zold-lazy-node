@@ -19,6 +19,26 @@ class TestGetRoot:
 		response = APP.test_client().get('/')
 		assert 'X-Zold-Version' in response.headers
 
+	def test_body_contents(self):
+		''' Тело реплая должно содержать определенные поля '''
+		json = APP.test_client().get('/').json
+		assert 'cpus' in json
+		assert 'hours_alive' in json
+		assert 'load' in json
+		assert 'memory' in json
+		assert 'nscore' in json
+		assert 'platform' in json
+		assert 'protocol' in json
+		assert 'remotes' in json
+		assert 'threads' in json
+		assert 'version' in json
+		assert 'wallets' in json
+		assert 'value' in json['score']
+		assert 'history_size' in json['entrance']
+		assert 'queue_age' in json['entrance']
+		assert 'queue' in json['entrance']
+		assert 'speed' in json['entrance']
+
 	def test_remote_from_header_scores(self):
 		'''
 		Тестируем, как сервер принимает информацию о новых ремотах
