@@ -9,7 +9,7 @@
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import NextScore, StrongestScore, XZoldScore
+from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreValid, ScoreValue
 from zold.time import AheadTime
@@ -68,11 +68,13 @@ def api_root():
 				raise RuntimeError('Unable to update remote by score')
 	# @todo #66 Старые Score необходимо поудалять из БД
 	data = {
-		'version': APP.config['ZOLD_VERSION'],
-		'score': StrongestScore(
-			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-			APP.config
-		).json(),
+		'cpus': 1,
+		'entrance': {
+			'history_size': 8,
+			'queue': 0,
+			'queue_age': 0,
+			'speed': 0
+		},
 		'farm': {
 			'current': [
 				s.json()
@@ -85,7 +87,26 @@ def api_root():
 					APP.config
 				)
 			]
-		}
+		},
+		'hours_alive': 1,
+		'load': 0.0,
+		'memory': 4 * 1024 * 1024,
+		'nscore': 1,
+		'platform': 'null',
+		'protocol': 2,
+		# @todo #126 Передать реальное количество имеющихся узлов.
+		'remotes': 20,
+		'score': ValueScore(
+			StrongestScore(
+				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
+				APP.config
+			),
+			APP.config
+		).json(),
+		'threads': '1/1',
+		'version': APP.config['ZOLD_VERSION'],
+		# @todo #126 Передать реальное количество имеющихся кошельков.
+		'wallets': 1
 	}
 	return data
 

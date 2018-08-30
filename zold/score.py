@@ -110,6 +110,19 @@ class StrongestScore:
 		return self.score().suffixes()
 
 
+class ValueScore:
+	''' Score, который сопровождается значением Value '''
+	def __init__(self, score, config):
+		self.score = score
+		self.config = config
+
+	def json(self):
+		''' Здесь к имеющимся полям добавляется метод value '''
+		jscore = self.score.json()
+		jscore['value'] = int(ScoreValue(JsonScore(jscore), self.config))
+		return jscore
+
+
 # @todo #51 ротестировать NextScore
 class NextScore:
 	''' Увеличенный Score на один суффикс больше, чем предыдущий '''
