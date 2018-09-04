@@ -4,7 +4,7 @@ server {
 
 	charset utf-8;
 	client_max_body_size 75M;
-	error_log error.log;
+	error_log error.log warn;
 	location / {
 		include proxy_params;
 		add_header Access-Control-Allow-Origin *;
