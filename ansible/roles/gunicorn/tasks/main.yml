@@ -19,8 +19,18 @@
   file:
     path: /run/gunicorn
     state: directory
-- name: Restart gunicorn
+- name: Activate gunicorn
   systemd:
     name: gunicorn
     enabled: yes
+    daemon_reload: yes
     state: restarted
+# @todo #113 После заливки сервер возвращает 502
+#  Если не сделать рестарт сервиса.
+#  Причем команда service не дает того же эффекта, что странно.
+- name: Restart gunicorn
+  become: yes
+  warn: False
+  shell: |
+    service gunicorn stop
+    service gunicorn start
