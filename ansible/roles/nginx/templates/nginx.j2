@@ -6,8 +6,8 @@ server {
 	client_max_body_size 75M;
 	error_log error.log warn;
 	location / {
-		include proxy_params;
+		include uwsgi_params;
 		add_header Access-Control-Allow-Origin *;
-		proxy_pass http://unix:/run/gunicorn/socket;
+		uwsgi_pass unix:///run/uwsgi/app/zold/socket;
 	}
 }

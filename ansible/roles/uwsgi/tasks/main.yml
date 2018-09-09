@@ -1,0 +1,26 @@
+---
+- name: Install uwsgi
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - uwsgi
+      - uwsgi-plugin-python3
+- name: Copy zold config for uwsgi
+  copy:
+    src: roles/uwsgi/files/zold.conf
+    dest: /etc/uwsgi/apps-available/zold.conf
+- name: Make zold config available for uwsgi
+  file:
+    src: /etc/uwsgi/apps-available/zold.conf
+    dest: /etc/uwsgi/apps-enabled/zold.conf
+    state: link
+- name: Create uwsgi socket directory
+  file:
+    path: /run/uwsgi
+    state: directory
+- name: Restart uwsgi
+  systemd:
+    name: nginx
+    enabled: yes
+    state: restarted
