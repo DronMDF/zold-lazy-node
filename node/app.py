@@ -11,7 +11,7 @@ from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
 from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
-from zold.score_props import ScoreValid, ScoreValue
+from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
 from node.db import DB
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
@@ -115,6 +115,24 @@ def api_root():
 def api_version():
 	''' версия ноды '''
 	return APP.config['ZOLD_VERSION']
+
+
+@APP.route('/tasks', methods=['GET'])
+def api_get_tasks():
+	''' Список задач для помошников '''
+	return {
+		'tasks': [
+			{'type': 'mining', 'base': str(ScoreHash(s, APP.config))}
+			for s in WeakScores(
+				AtLeastOneDbScores(
+					NewerThenScores(DbScores(), AheadTime(12)),
+					APP.config
+				),
+				16,
+				APP.config
+			)
+		]
+	}
 
 
 @APP.route('/score', methods=['POST'])
