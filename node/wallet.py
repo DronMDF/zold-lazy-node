@@ -30,3 +30,22 @@ class DbWallet:
 		else:
 			DB.session.add(Wallet(self.wallet_id, self.text))
 		DB.session.commit()
+
+
+# @todo #139 DbWallet должен представлять структуру БД, но это имя занято
+class DbRecordWallet:
+	''' Одиночный кошелек в БД'''
+	def __init__(self, wallet):
+		self.wallet = wallet
+
+	# @todo #139 Название метода id считается невалидным,
+	#  хотя оно подходит больше всего. Kак же назвать этот метод?
+	def wid(self):
+		''' Идентификатор кошелька '''
+		return self.wallet.wallet_id
+
+
+class DbWallets:
+	''' Все кошельки в БД '''
+	def __iter__(self):
+		return (DbRecordWallet(w) for w in Wallet.query.all())

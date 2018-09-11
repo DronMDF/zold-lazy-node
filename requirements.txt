@@ -3,6 +3,7 @@ Flask
 Flask-API
 Flask-SQLAlchemy
 pycodestyle
+pycrypto
 pylint
 pytest
 requests

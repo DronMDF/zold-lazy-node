@@ -6,9 +6,27 @@
 
 ''' Тестирование Работы со списком задач '''
 
+from test.zold.test_score import FakeScore
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
+from .test_wallet import FakeWallet
+
+
+class WalletScore:
+	''' Score для кошулька '''
+	def __init__(self, wallet):
+		self.wallet = wallet
+
+	def __str__(self):
+		return str(
+			FakeScore(
+				3,
+				APP.config,
+				prefix=self.wallet.prefix(),
+				id=self.wallet.idstr()
+			)
+		)
 
 
 class TestGetTasks:
@@ -20,3 +38,34 @@ class TestGetTasks:
 		response = APP.test_client().get('/tasks')
 		assert response.status_code == status.HTTP_200_OK
 		assert any(t['type'] == 'mining' for t in response.json['tasks'])
+
+	def test_remotes_tasks(self):
+		''' В списке задач присутствуют задачи поиска кошелька '''
+		wallet = FakeWallet()
+		APP.test_client().get(
+			'/',
+			headers={'X-Zold-Score': '3/3: %s' % WalletScore(wallet)}
+		)
+		response = APP.test_client().get('/tasks')
+		assert response.status_code == status.HTTP_200_OK
+		assert any(
+			t['id'] == wallet.idstr() and t['prefix'] in wallet.public()
+			for t in response.json['tasks']
+			if t['type'] == 'find'
+		)
+
+	def test_remotes_not_need_tasks(self):
+		''' В списке задач отсутствую задачи поиска, если кошелек присутствует '''
+		wallet = FakeWallet()
+		APP.test_client().get(
+			'/',
+			headers={'X-Zold-Score': '3/3: %s' % WalletScore(wallet)}
+		)
+		APP.test_client().put('/wallet/%s' % wallet.idstr(), data=str(wallet))
+		response = APP.test_client().get('/tasks')
+		assert response.status_code == status.HTTP_200_OK
+		assert not any(
+			t['id'] == wallet.idstr()
+			for t in response.json['tasks']
+			if t['type'] == 'find'
+		)
