@@ -98,12 +98,16 @@ class NRemotes:
 
 
 class ScenarioUpdate:
+	''' Сценарий обновления списка нод '''
 	def run(self, args):
+		''' Основная процедура сценария '''
 		return int(NRemotes(args))
 
 
 class ScenarioMining:
+	''' Сценарий майнинга '''
 	def run(self, args):
+		''' Основная процедура сценария '''
 		url = 'http://%s:%s' % tuple(args)
 
 		while True:
@@ -132,12 +136,14 @@ class ScenarioMining:
 
 
 class Scenarios:
+	''' Метасценарий, разрыливает на нижележащие '''
 	def __init__(self, **scenarios):
 		self.scenarios = scenarios
 
 	def run(self, args):
+		''' Главный метод метасценария '''
 		if args[0] in self.scenarios:
-			return self.scenarios[args[0]].run(args[1:])
+			self.scenarios[args[0]].run(args[1:])
 
 
 Scenarios(
