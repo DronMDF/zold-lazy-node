@@ -97,39 +97,50 @@ class NRemotes:
 		return len(done)
 
 
-def main(argv):
-	''' Основной метод майнера '''
-	if argv[0] == 'update':
-		return int(NRemotes(argv[1:]))
+class ScenarioUpdate:
+	def run(self, args):
+		return int(NRemotes(args))
 
-	# @todo #107: Майнинг необходмо вынести из main
-	url = 'http://%s:%s' % tuple(argv)
 
-	while True:
-		try:
-			reply = requests.get(url)
-			if reply.status_code != 200:
-				raise RuntimeError("Ошибка получения информации")
+class ScenarioMining:
+	def run(self, args):
+		url = 'http://%s:%s' % tuple(args)
 
-			json_scores = reply.json().get('farm', {}).get('current', [])
-			if json_scores:
-				json_score = random.choice(json_scores)
-				start_time = datetime.now()
-				suffix = MinedScore(
-					JsonScore(json_score),
-					{'STRENGTH': json_score['strength']}
-				).suffixes()[-1]
-				end_time = datetime.now()
-				print("Mined: %s take %.2f sec" % (
-					suffix,
-					(end_time - start_time).total_seconds()
-				))
-				requests.post(url + '/score', json={'suffix': suffix})
-			else:
-				time.sleep(60)
-		except Exception as exc:
-			print(exc)
+		while True:
+			try:
+				# @todo #122 Информацию для майнинга необходимо запрашивать через /tasks
+				reply = requests.get(url)
+				if reply.status_code != 200:
+					raise RuntimeError("Ошибка получения информации")
+				json_scores = reply.json().get('farm', {}).get('current', [])
+				if json_scores:
+					json_score = random.choice(json_scores)
+					start_time = datetime.now()
+					suffix = MinedScore(
+						JsonScore(json_score),
+						{'STRENGTH': json_score['strength']}
+					).suffixes()[-1]
+					end_time = datetime.now()
+					print("Mined: %s take %.2f sec" % (
+						suffix,
+						(end_time - start_time).total_seconds()
+					))
+					requests.post(url + '/score', json={'suffix': suffix})
+			except Exception as exc:
+				print(exc)
 			time.sleep(60)
 
 
-main(sys.argv[1:])
+class Scenarios:
+	def __init__(self, **scenarios):
+		self.scenarios = scenarios
+
+	def run(self, args):
+		if args[0] in self.scenarios:
+			return self.scenarios[args[0]].run(args[1:])
+
+
+Scenarios(
+	update=ScenarioUpdate(),
+	mine=ScenarioMining()
+).run(sys.argv[1:])
