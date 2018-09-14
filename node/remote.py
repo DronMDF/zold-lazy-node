@@ -18,9 +18,12 @@ class DbRemote:
 
 	def json(self):
 		''' В виде json '''
+		(prefix, id) = tuple(self.record.invoice.split('@'))
 		return {
 			'host': self.record.host,
 			'port': self.record.port,
+			'prefix': prefix,
+			'id': id,
 			'score': self.record.score_value
 		}
 

@@ -61,7 +61,8 @@ enable=all
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 disable=bad-continuation,too-few-public-methods,no-self-use,broad-except,
-	suppressed-message,locally-disabled,no-member,too-many-ancestors
+	suppressed-message,locally-disabled,no-member,too-many-ancestors,
+	redefined-builtin
 
 [REPORTS]
 
@@ -204,7 +205,7 @@ variable-naming-style=snake_case
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style
-#variable-rgx=
+variable-rgx=([a-z][a-z0-9_]+)$
 
 
 [LOGGING]
