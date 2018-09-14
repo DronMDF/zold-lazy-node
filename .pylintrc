@@ -114,7 +114,7 @@ attr-naming-style=snake_case
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style
-#attr-rgx=
+attr-rgx=([a-z][A-Za-z0-9_]+|(__.*__))$
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,
@@ -178,7 +178,7 @@ method-naming-style=snake_case
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style
-#method-rgx=
+method-rgx=([a-z][A-Za-z0-9_]+|(__.*__))$
 
 # Naming style matching correct module names
 module-naming-style=snake_case
