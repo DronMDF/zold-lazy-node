@@ -8,7 +8,7 @@
 
 from test.zold.test_score import FakeScore
 from node.app import APP
-from zold.score_props import ScoreValue
+from node.db import DB, Remote
 
 
 class TestGetRoot:
@@ -44,16 +44,21 @@ class TestGetRoot:
 		Тестируем, как сервер принимает информацию о новых ремотах
 		через содержимое заголовка
 		'''
-		config = {'STRENGTH': 3}
-		score = FakeScore(3, config)
+		with APP.app_context():
+			DB.session.query(Remote).delete()
 		APP.test_client().get(
 			'/',
 			headers={
-				'X-Zold-Score': '%u/%u: %s' % (ScoreValue(score, config), 3, score)
+				'X-Zold-Score': '3/3: %s' % FakeScore(
+					3,
+					{'STRENGTH': 3},
+					host='5.4.3.2',
+					port=2048
+				)
 			}
 		)
 		response = APP.test_client().get('/remotes')
 		assert any((
-			r['host'] == '127.0.0.1' and r['port'] == 4096
+			r['host'] == '5.4.3.2' and r['port'] == 2048
 			for r in response.json['all']
 		))

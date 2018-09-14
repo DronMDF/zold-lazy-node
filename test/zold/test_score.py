@@ -14,22 +14,27 @@ from zold.score import (
 	XZoldScore
 )
 from zold.score_props import ScoreValue
+from zold.time import NowTime
 
 
-# @todo #105 Необходимо иметь возможность создавать Score
-#  с необходимыми параметрами и актуальной датой
 class FakeScore:
 	''' Тестовый score, он имеет необходимое количество суффиксов '''
-	def __init__(self, value, config):
+	def __init__(self, value, config, **args):
 		if value > 0:
 			self.score = MinedScore(
-				FakeScore(value - 1, config),
+				FakeScore(value - 1, config, **args),
 				config,
 				0
 			)
 		else:
 			self.score = StringScore(
-				'2018-06-20T20:01:32Z 127.0.0.1 4096 2X8kfnzk@9a856dac7d475014',
+				'%s %s %u %s@%s' % (
+					NowTime(),
+					args.get('host', '1.1.1.1'),
+					args.get('port', 4096),
+					args.get('prefix', 'prefixit'),
+					args.get('id', 1234567812345678),
+				),
 				config
 			)
 
