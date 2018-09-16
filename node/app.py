@@ -6,6 +6,7 @@
 
 ''' WEB интерфейс узла '''
 
+import itertools
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
@@ -15,7 +16,7 @@ from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
 from node.db import DB
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
-from node.wallet import DbWallet
+from node.wallet import DbWallet, DbWallets
 from node.remote import DbRemotes, IsRemoteUpdated
 
 
@@ -118,21 +119,34 @@ def api_version():
 
 
 @APP.route('/tasks', methods=['GET'])
-def api_get_tasks():
+def api_tasks():
 	''' Список задач для помошников '''
-	return {
-		'tasks': [
-			{'type': 'mining', 'base': str(ScoreHash(s, APP.config))}
-			for s in WeakScores(
-				AtLeastOneDbScores(
-					NewerThenScores(DbScores(), AheadTime(12)),
+	data = {
+		'tasks': list(itertools.chain(
+			[
+				{'type': 'mining', 'base': str(ScoreHash(s, APP.config))}
+				for s in WeakScores(
+					AtLeastOneDbScores(
+						NewerThenScores(DbScores(), AheadTime(12)),
+						APP.config
+					),
+					16,
 					APP.config
-				),
-				16,
-				APP.config
-			)
-		]
+				)
+			],
+			[
+				{
+					'type': 'find',
+					'id': r.json()['id'],
+					'prefix': r.json()['prefix']
+				}
+				for r in DbRemotes()
+				if r.json()['id'] not in [w.wid() for w in DbWallets()]
+			]
+		))
 	}
+	print(data)
+	return data
 
 
 @APP.route('/score', methods=['POST'])
