@@ -6,8 +6,10 @@
 
 ''' Модель данных (схема БД) '''
 
+import enum
 from flask_sqlalchemy import SQLAlchemy
 from zold.time import NowTime
+
 
 DB = SQLAlchemy()
 
@@ -65,9 +67,35 @@ class Remote(DB.Model):
 class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)
-	wallet_id = DB.Column(DB.String(16))
-	body = DB.Column(DB.UnicodeText())
+	wallet_id = DB.Column(DB.String(16), unique=True, nullable=False)
+	network = DB.Column(DB.Text)
+	public = DB.Column(DB.Text)
 
 	def __init__(self, wallet_id, body):
 		self.wallet_id = wallet_id
-		self.body = body
+		bdata = body.split('\n')
+		self.network = bdata[0]
+		self.public = bdata[3]
+
+
+class TransactionStatus(enum.Enum):
+	''' Состояние транзакции с каждой стороны '''
+	UNKNOWN = 0
+	GOOD = 9
+
+
+class Transaction(DB.Model):
+	''' Транзакция '''
+	id = DB.Column(DB.Integer, primary_key=True)
+	transact_id = DB.Column(DB.Integer)
+	time = DB.Column(DB.DateTime)
+	src_id = DB.Column(DB.String(16))
+	dst_prefix = DB.Column(DB.String(32))
+	dst_id = DB.Column(DB.String(16))
+	# Размер суммы всегда положительный. Храним переводы.
+	amount = DB.Column(DB.Integer)
+	details = DB.Column(DB.Text)
+	signature = DB.Column(DB.Text)
+
+	src_status = DB.Column(DB.Enum())
+	dst_status = DB.Column(DB.Enum())

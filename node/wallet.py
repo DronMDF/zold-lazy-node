@@ -17,10 +17,10 @@ class DbWallet:
 
 	def body(self):
 		''' Чтение содержимого кошелька '''
-		dbwallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
-		if dbwallet is None:
+		wallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
+		if wallet is None:
 			raise RuntimeError('Wallet not found')
-		return dbwallet.body
+		return '\n'.join((wallet.network, '2', self.wallet_id, wallet.public, ''))
 
 	def save(self):
 		''' Обновление содержимого кошелька '''
