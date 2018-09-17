@@ -67,21 +67,36 @@ class Remote(DB.Model):
 class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)
-	wallet_id = DB.Column(DB.String(16), unique=True, nullable=False)
-	network = DB.Column(DB.Text)
-	public = DB.Column(DB.Text)
+	wallet_id = DB.Column(DB.String(16), nullable=False)
+	network = DB.Column(DB.Text, default='zold')
+	public = DB.Column(DB.Text, nullable=False)
 
 	def __init__(self, wallet_id, body):
+		# @todo #149 В DB.Wallet нельзя производить парсинг кошельков.
+		#  слишком низкий уровень.
 		self.wallet_id = wallet_id
 		bdata = body.split('\n')
 		self.network = bdata[0]
 		self.public = bdata[3]
 
 
-class TransactionStatus(enum.Enum):
-	''' Состояние транзакции с каждой стороны '''
+class WantedWallet(DB.Model):
+	'''
+	Кошелек, который необходимо найти
+	В эту таблицу попадают кошельки, кторые являются источниками транзакций
+	При этом данные о транзакции отсутствуют в БД. Мы не можем принимать
+	эти транзакции, но должны оставить себе информацию для поиска.
+	'''
+	id = DB.Column(DB.Integer, primary_key=True)
+	wallet_id = DB.Column(DB.String(16), nullable=False)
+	network = DB.Column(DB.Text, default='zold')
+
+
+class TransactionDstStatus(enum.Enum):
+	''' Состояние транзакции относительно получателя '''
 	UNKNOWN = 0
-	GOOD = 9
+	BAD = 1
+	GOOD = 2
 
 
 class Transaction(DB.Model):
@@ -97,5 +112,6 @@ class Transaction(DB.Model):
 	details = DB.Column(DB.Text)
 	signature = DB.Column(DB.Text)
 
-	src_status = DB.Column(DB.Enum())
-	dst_status = DB.Column(DB.Enum())
+	# В БД попадают только транзакции с правильными сигнатурами.
+	# Но кошелька получателя в тот момент может еще не быть.
+	dst_status = DB.Column(DB.Enum(TransactionDstStatus))
