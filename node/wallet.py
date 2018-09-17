@@ -6,46 +6,43 @@
 
 ''' Работа с кошельками '''
 
+from sqlalchemy.orm.exc import NoResultFound
 from node.db import DB, Wallet
 
 
 class DbWallet:
 	''' Представление кошелька '''
-	def __init__(self, wallet_id, body=None):
-		self.wallet_id = wallet_id
-		self.text = body
-
-	def body(self):
-		''' Чтение содержимого кошелька '''
-		wallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
-		if wallet is None:
-			raise RuntimeError('Wallet not found')
-		return '\n'.join((wallet.network, '2', self.wallet_id, wallet.public, ''))
-
-	def save(self):
-		''' Обновление содержимого кошелька '''
-		dbwallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
-		if dbwallet is not None:
-			dbwallet.body = self.text
-		else:
-			DB.session.add(Wallet(self.wallet_id, self.text))
-		DB.session.commit()
-
-
-# @todo #139 DbWallet должен представлять структуру БД, но это имя занято
-class DbRecordWallet:
-	''' Одиночный кошелек в БД'''
 	def __init__(self, wallet):
 		self.wallet = wallet
 
-	# @todo #139 Название метода id считается невалидным,
-	#  хотя оно подходит больше всего. Kак же назвать этот метод?
-	def wid(self):
+	def id(self):
 		''' Идентификатор кошелька '''
 		return self.wallet.wallet_id
+
+	def body(self):
+		''' Заголовок кошелька '''
+		return '\n'.join((
+			self.wallet.network,
+			'2',
+			self.wallet.wallet_id,
+			self.wallet.public,
+			''
+		))
 
 
 class DbWallets:
 	''' Все кошельки в БД '''
 	def __iter__(self):
-		return (DbRecordWallet(w) for w in Wallet.query.all())
+		return (DbWallet(w) for w in Wallet.query.all())
+
+	def wallet(self, id):
+		''' Возвращает конкретный кошелек '''
+		try:
+			return DbWallet(Wallet.query.filter_by(wallet_id=id).one())
+		except NoResultFound as err:
+			raise RuntimeError("Walet not found") from err
+
+	def add(self, wallet):
+		''' Добавляет новый кошелек '''
+		DB.session.add(Wallet(wallet.id(), wallet.network(), wallet.public()))
+		DB.session.commit()

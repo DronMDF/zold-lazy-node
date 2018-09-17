@@ -14,9 +14,10 @@ from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
+from zold.wallet import StringWallet
 from node.db import DB
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
-from node.wallet import DbWallet, DbWallets
+from node.wallet import DbWallets
 from node.remote import DbRemotes, IsRemoteUpdated
 
 
@@ -141,7 +142,7 @@ def api_tasks():
 					'prefix': r.json()['prefix']
 				}
 				for r in DbRemotes()
-				if r.json()['id'] not in [w.wid() for w in DbWallets()]
+				if r.json()['id'] not in [w.id() for w in DbWallets()]
 			]
 		))
 	}
@@ -192,7 +193,7 @@ def api_get_wallet(wallet_id):
 			'protocol': '1',
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': DbWallet(wallet_id).body(),
+			'body': DbWallets().wallet(wallet_id).body(),
 			'score': StrongestScore(
 				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
 				APP.config
@@ -209,7 +210,8 @@ def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
-	DbWallet(wallet_id, request.get_data().decode('utf8')).save()
+	wallet = StringWallet(request.get_data().decode('utf8'))
+	DbWallets().add(wallet)
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
 		'protocol': '1',

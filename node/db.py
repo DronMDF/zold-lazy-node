@@ -71,13 +71,10 @@ class Wallet(DB.Model):
 	network = DB.Column(DB.Text, default='zold')
 	public = DB.Column(DB.Text, nullable=False)
 
-	def __init__(self, wallet_id, body):
-		# @todo #149 В DB.Wallet нельзя производить парсинг кошельков.
-		#  слишком низкий уровень.
+	def __init__(self, wallet_id, network, public):
 		self.wallet_id = wallet_id
-		bdata = body.split('\n')
-		self.network = bdata[0]
-		self.public = bdata[3]
+		self.network = network
+		self.public = public
 
 
 class WantedWallet(DB.Model):
