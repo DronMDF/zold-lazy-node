@@ -6,8 +6,10 @@
 
 ''' Модель данных (схема БД) '''
 
+import enum
 from flask_sqlalchemy import SQLAlchemy
 from zold.time import NowTime
+
 
 DB = SQLAlchemy()
 
@@ -65,9 +67,48 @@ class Remote(DB.Model):
 class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)
-	wallet_id = DB.Column(DB.String(16))
-	body = DB.Column(DB.UnicodeText())
+	wallet_id = DB.Column(DB.String(16), nullable=False)
+	network = DB.Column(DB.Text, default='zold')
+	public = DB.Column(DB.Text, nullable=False)
 
-	def __init__(self, wallet_id, body):
+	def __init__(self, wallet_id, network, public):
 		self.wallet_id = wallet_id
-		self.body = body
+		self.network = network
+		self.public = public
+
+
+class WantedWallet(DB.Model):
+	'''
+	Кошелек, который необходимо найти
+	В эту таблицу попадают кошельки, кторые являются источниками транзакций
+	При этом данные о транзакции отсутствуют в БД. Мы не можем принимать
+	эти транзакции, но должны оставить себе информацию для поиска.
+	'''
+	id = DB.Column(DB.Integer, primary_key=True)
+	wallet_id = DB.Column(DB.String(16), nullable=False)
+	network = DB.Column(DB.Text, default='zold')
+
+
+class TransactionDstStatus(enum.Enum):
+	''' Состояние транзакции относительно получателя '''
+	UNKNOWN = 0
+	BAD = 1
+	GOOD = 2
+
+
+class Transaction(DB.Model):
+	''' Транзакция '''
+	id = DB.Column(DB.Integer, primary_key=True)
+	transact_id = DB.Column(DB.Integer)
+	time = DB.Column(DB.DateTime)
+	src_id = DB.Column(DB.String(16))
+	dst_prefix = DB.Column(DB.String(32))
+	dst_id = DB.Column(DB.String(16))
+	# Размер суммы всегда положительный. Храним переводы.
+	amount = DB.Column(DB.Integer)
+	details = DB.Column(DB.Text)
+	signature = DB.Column(DB.Text)
+
+	# В БД попадают только транзакции с правильными сигнатурами.
+	# Но кошелька получателя в тот момент может еще не быть.
+	dst_status = DB.Column(DB.Enum(TransactionDstStatus))

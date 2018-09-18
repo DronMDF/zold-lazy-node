@@ -14,7 +14,7 @@ class TestGetWallet:
 	''' Получение кошелька '''
 	WALLET = '\n'.join((
 		'zold',
-		'0.11.13',
+		'2',
 		'0000000000000000',
 		''.join((
 			'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA96lM5Y+QHYr9WvUucw/wW+dJpnYBa',
@@ -29,20 +29,7 @@ class TestGetWallet:
 			'qRh0ilqJ4nq4q/eOfUuSJAUEQIZdQX9MBg3lJ0Pw9aSoSAp8iQWRdNTvqvuTZqExs3Tp1UCAw',
 			'EAAQ=='
 		)),
-		'',
-		''.join((
-			'0001;2018-05-27T15:11:36Z;fffffc0000000000;XC1Vk4CU;00000000000ff1ce;',
-			'emission 1;5SsewlCnY+9rnY7JvFqBjT1fOCUUF4ZX2ZF89EsfYuFweRvraFh9YZBgOodd2C',
-			'NCo9zQ0NZdhLpuRUzbulEm+tofPV3KzyxbNwstiuB5FWD7F5JJLj6YvxNVRPbVDM/bN22MThi',
-			'EBpiVZlPuiHKv0Od57O+z7VEYJwTKtsw2gQ28nA0U47nJ/x0u0qQVFCu/k1kB9x7pQAhFtRVL',
-			'DhSkhvEkgF08G/np10mrz9J1sL5JFXMokKDeZS0oxehPOH1h0eIpvTCAH9eTV0fCP6conzpFN',
-			'RNFNk6W+6txq1HuLJpnh9me60KOI6MlC+JPE/koQNAAi7xYk9oqpXVS+oubjbaydYeDu6BmwZ',
-			'NqwX5GkEwnSQgY/MGI4v43nTZvp/RA1zfYfutI61WFMQ/eaXcTxSxmF5zrpi0Sd9vpxBUVHOS',
-			'd3h/VwmpDDD0+qLhFR6q6ewszdAyK9OitfHIFMxk9b3kvgD/tZ96G3T/JNZ7zHG5/qP8nY0O/',
-			'iwppgRWJbxDNj1VetkZlVN3vUdJuaSvXE9/b870Bf4dbmPk1M4dKvJGIWg47hiNHQxDhCKjLF',
-			'ZTy47RjxUanK/HjpchXPK2kL+wXxn8pJqCYgJiN2GYx2lJ1crKVbWhYU4MCEBnoGEHSXuFPMW',
-			'03Ze5cWF9lbjMmOZcoIFjcJ5JRoKL80RGLeyI='
-		))
+		''
 	))
 
 	def test_wallet_not_found(self):

@@ -14,9 +14,10 @@ from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
+from zold.wallet import StringWallet
 from node.db import DB
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
-from node.wallet import DbWallet, DbWallets
+from node.wallet import DbWallets
 from node.remote import DbRemotes, IsRemoteUpdated
 
 
@@ -141,11 +142,10 @@ def api_tasks():
 					'prefix': r.json()['prefix']
 				}
 				for r in DbRemotes()
-				if r.json()['id'] not in [w.wid() for w in DbWallets()]
+				if r.json()['id'] not in [w.id() for w in DbWallets(APP.config)]
 			]
 		))
 	}
-	print(data)
 	return data
 
 
@@ -187,12 +187,16 @@ def api_remotes():
 @APP.route('/wallet/<wallet_id>', methods=['GET'])
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
+	# @todo #146 Кошелек формируется из всех транзакций по дате.
+	#  Исходящие транзакции у нас только проверенные.
+	#  Входящие транзакции только со статусом GOOD
+	#  И все сортируется по дате.
 	try:
 		data = {
-			'protocol': '1',
+			'protocol': APP.config['ZOLD_PROTOCOL'],
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': DbWallet(wallet_id).body(),
+			'body': DbWallets(APP.config).wallet(wallet_id).body(),
 			'score': StrongestScore(
 				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
 				APP.config
@@ -209,10 +213,19 @@ def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
-	DbWallet(wallet_id, request.get_data().decode('utf8')).save()
+	wallet = StringWallet(request.get_data().decode('utf8'))
+	# @todo #146 Если кошелек присутствует в БД - не требуется его добавлять.
+	DbWallets(APP.config).add(wallet)
+	# @todo #146 Входящие транзакции отсутствующие в БД фиксируются
+	#  в списке WantedWallet, который доступен через /tasks
+	# @todo #146 Непроверенные входящие транзакции проверяются здесь.
+	#  Это нужно для правильного определения бюджета.
+	# @todo #146 Обработка входящих транзакций прекращается при привышении бюджета
+	#  Транзакции отсортировываются по дате и проверяем только те,
+	#  которые проходят по бюджету.
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
-		'protocol': '1',
+		'protocol': APP.config['ZOLD_PROTOCOL'],
 		'id': wallet_id,
 		'score': StrongestScore(
 			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),

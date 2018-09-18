@@ -16,7 +16,7 @@ class TestPutWallet:
 	EMPTY_WALLET = '\n'.join((
 		'zold',
 		'1',
-		'cb91e8b5b4b66866'
+		'cb91e8b5b4b66866',
 		''.join((
 			'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA2Z999vmvkavYi4Uh7uV2mPPKYMAKS',
 			'rnbO2Iwi97PlXOACocXYCaRaoWHCrbtHuKR3dtjrU9hVygvl0UlmeMnvilOLobMMIBrr+TTjp',

@@ -11,41 +11,44 @@ from node.db import DB, Wallet
 
 class DbWallet:
 	''' Представление кошелька '''
-	def __init__(self, wallet_id, body=None):
-		self.wallet_id = wallet_id
-		self.text = body
-
-	def body(self):
-		''' Чтение содержимого кошелька '''
-		dbwallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
-		if dbwallet is None:
-			raise RuntimeError('Wallet not found')
-		return dbwallet.body
-
-	def save(self):
-		''' Обновление содержимого кошелька '''
-		dbwallet = Wallet.query.filter_by(wallet_id=self.wallet_id).first()
-		if dbwallet is not None:
-			dbwallet.body = self.text
-		else:
-			DB.session.add(Wallet(self.wallet_id, self.text))
-		DB.session.commit()
-
-
-# @todo #139 DbWallet должен представлять структуру БД, но это имя занято
-class DbRecordWallet:
-	''' Одиночный кошелек в БД'''
-	def __init__(self, wallet):
+	def __init__(self, wallet, config):
 		self.wallet = wallet
+		self.config = config
 
-	# @todo #139 Название метода id считается невалидным,
-	#  хотя оно подходит больше всего. Kак же назвать этот метод?
-	def wid(self):
+	def id(self):
 		''' Идентификатор кошелька '''
 		return self.wallet.wallet_id
+
+	def body(self):
+		''' Заголовок кошелька '''
+		return '\n'.join((
+			self.wallet.network,
+			self.config['ZOLD_PROTOCOL'],
+			self.wallet.wallet_id,
+			self.wallet.public,
+			''
+		))
 
 
 class DbWallets:
 	''' Все кошельки в БД '''
+	def __init__(self, config):
+		self.config = config
+
 	def __iter__(self):
-		return (DbRecordWallet(w) for w in Wallet.query.all())
+		return (DbWallet(w, self.config) for w in Wallet.query.all())
+
+	def wallet(self, id):
+		''' Возвращает конкретный кошелек '''
+		# @todo #146 Использовать one при конкретном запросе кошелька
+		#  Сейчас это не срабатывает, потому что не контролируется содержимое БД
+		#  Кошельки в БД дублируются
+		wallet = Wallet.query.filter_by(wallet_id=id).first()
+		if wallet is None:
+			raise RuntimeError("Walet not found")
+		return DbWallet(wallet, self.config)
+
+	def add(self, wallet):
+		''' Добавляет новый кошелек '''
+		DB.session.add(Wallet(wallet.id(), wallet.network(), wallet.public()))
+		DB.session.commit()
