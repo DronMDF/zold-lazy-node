@@ -11,15 +11,16 @@ import re
 from Crypto.PublicKey import RSA
 
 
+# @todo #154 Перенести FakeWallet в test/zold/test_wallet.py
 class FakeWallet:
 	''' Случайный кошелек для тестирования '''
 	def __init__(self):
-		self.id = random.randint(0, 0xffffffffffffffff)
+		self.wallet_id = random.randint(0, 0xffffffffffffffff)
 		self.key = RSA.generate(1024)
 
-	def idstr(self):
+	def id(self):
 		''' Идентификатор кошелька '''
-		return '%016x' % self.id
+		return '%016x' % self.wallet_id
 
 	def prefix(self):
 		''' Выбираем префикс '''
@@ -35,4 +36,4 @@ class FakeWallet:
 		return self.key.publickey().exportKey('PEM').decode('ascii')
 
 	def __str__(self):
-		return '\n'.join(('test', '2', self.idstr(), self.public(), ''))
+		return '\n'.join(('test', '2', self.id(), self.public(), ''))

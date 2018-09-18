@@ -24,7 +24,7 @@ class WalletScore:
 				3,
 				APP.config,
 				prefix=self.wallet.prefix(),
-				id=self.wallet.idstr()
+				id=self.wallet.id()
 			)
 		)
 
@@ -49,7 +49,7 @@ class TestGetTasks:
 		response = APP.test_client().get('/tasks')
 		assert response.status_code == status.HTTP_200_OK
 		assert any(
-			t['id'] == wallet.idstr() and t['prefix'] in wallet.public()
+			t['id'] == wallet.id() and t['prefix'] in wallet.public()
 			for t in response.json['tasks']
 			if t['type'] == 'find'
 		)
@@ -61,11 +61,11 @@ class TestGetTasks:
 			'/',
 			headers={'X-Zold-Score': '3/3: %s' % WalletScore(wallet)}
 		)
-		APP.test_client().put('/wallet/%s' % wallet.idstr(), data=str(wallet))
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
 		response = APP.test_client().get('/tasks')
 		assert response.status_code == status.HTTP_200_OK
 		assert not any(
-			t['id'] == wallet.idstr()
+			t['id'] == wallet.id()
 			for t in response.json['tasks']
 			if t['type'] == 'find'
 		)

@@ -214,8 +214,11 @@ def api_put_wallet(wallet_id):
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
 	wallet = StringWallet(request.get_data().decode('utf8'))
-	# @todo #146 Если кошелек присутствует в БД - не требуется его добавлять.
-	DbWallets(APP.config).add(wallet)
+	dbwallets = DbWallets(APP.config)
+	try:
+		dbwallets.wallet(wallet.id())
+	except RuntimeError:
+		dbwallets.add(wallet)
 	# @todo #146 Входящие транзакции отсутствующие в БД фиксируются
 	#  в списке WantedWallet, который доступен через /tasks
 	# @todo #146 Непроверенные входящие транзакции проверяются здесь.
