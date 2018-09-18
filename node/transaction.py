@@ -6,7 +6,7 @@
 
 ''' Работа с транзакциями '''
 
-from node.db import Transaction
+from node.db import DB, Transaction
 from zold.time import DatetimeTime
 
 
@@ -49,3 +49,8 @@ class DbTransactions:
 	def select(self, **query):
 		''' Выбор транзакций из БД '''
 		return (DbTransaction(t) for t in Transaction.query.filter_by(**query).all())
+
+	def add(self, wallet_id, transaction):
+		''' Добавление транзакций в БД '''
+		DB.session.add(Transaction(wallet_id, transaction))
+		DB.session.commit()

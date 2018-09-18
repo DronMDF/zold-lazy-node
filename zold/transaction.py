@@ -6,6 +6,10 @@
 
 ''' Работа с транзакциями '''
 
+import base64
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
 from .time import StringTime
 
 
@@ -81,6 +85,15 @@ class OrderedTransactions:
 		return iter(sorted(self.transactions, key=lambda t: t.time().as_datetime()))
 
 
+class OutgoingTransactions:
+	''' Список исходящих транзакций '''
+	def __init__(self, transactions):
+		self.transactions = transactions
+
+	def __iter__(self):
+		return (t for t in self.transactions if t.amount() < 0)
+
+
 class TransactionString:
 	''' Транзакция в виде строки '''
 	def __init__(self, transaction):
@@ -106,3 +119,27 @@ class TransactionString:
 			details,
 			signature
 		))
+
+
+class TransactionValid:
+	''' Состояние транзакции '''
+	def __init__(self, transaction, wallet):
+		self.transaction = transaction
+		self.wallet = wallet
+
+	def __bool__(self):
+		# @todo #163 Формирование данных транзакции для подписи - типовая операция.
+		#  Повторяется например еще в test.node.test_wallet.FakeTransaction
+		transaction_id = '%04x' % self.transaction.id()
+		time = str(self.transaction.time())
+		amount = self.transaction.amount()
+		if amount < 0:
+			amount += 0x10000000000000000
+		amstr = '%016x' % amount
+		prefix = self.transaction.prefix()
+		bnf = self.transaction.bnf()
+		details = self.transaction.details()
+		key = RSA.importKey(base64.b64decode(self.wallet.public()))
+		return PKCS1_v1_5.new(key).verify(SHA256.new(' '.join(
+			(bnf, transaction_id, time, amstr, prefix, bnf, details)
+		).encode('ascii')), base64.b64decode(self.transaction.signature()))

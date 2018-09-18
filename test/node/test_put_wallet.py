@@ -10,7 +10,9 @@ from flask_api import status
 from node.app import APP
 from zold.score import JsonScore
 from zold.score_props import ScoreValid
-from .test_wallet import FakeWallet
+from zold.wallet import TransactionWallet
+from zold.transaction import TransactionString
+from .test_wallet import FakeTransaction, FakeWallet, RootWallet
 
 
 class TestPutWallet:
@@ -33,3 +35,20 @@ class TestPutWallet:
 			data=str(wallet)
 		)
 		assert response.status_code == status.HTTP_200_OK
+
+	def test_put_root_wallet_import_all_valid(self):
+		'''
+		Загрузка корневого кошелька
+		На нем не бывает нехватки средств
+		И все транзакции необходимо проверять и принимать
+		'''
+		src_wallet = RootWallet()
+		dst_wallet = FakeWallet()
+		transact = FakeTransaction(src_wallet, dst_wallet, -1000)
+		wallet = TransactionWallet(src_wallet, transact)
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/wallet/%s' % wallet.id())
+		assert response.status_code == status.HTTP_200_OK
+		# Там могут быть левые транзакции, поэтому ищем нашу
+		print(response.json['body'])
+		assert str(TransactionString(transact)) in response.json['body']
