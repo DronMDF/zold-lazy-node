@@ -6,14 +6,14 @@
 
 ''' Работа с кошельками '''
 
-from sqlalchemy.orm.exc import NoResultFound
 from node.db import DB, Wallet
 
 
 class DbWallet:
 	''' Представление кошелька '''
-	def __init__(self, wallet):
+	def __init__(self, wallet, config):
 		self.wallet = wallet
+		self.config = config
 
 	def id(self):
 		''' Идентификатор кошелька '''
@@ -23,7 +23,7 @@ class DbWallet:
 		''' Заголовок кошелька '''
 		return '\n'.join((
 			self.wallet.network,
-			'2',
+			self.config['ZOLD_PROTOCOL'],
 			self.wallet.wallet_id,
 			self.wallet.public,
 			''
@@ -32,15 +32,21 @@ class DbWallet:
 
 class DbWallets:
 	''' Все кошельки в БД '''
+	def __init__(self, config):
+		self.config = config
+
 	def __iter__(self):
-		return (DbWallet(w) for w in Wallet.query.all())
+		return (DbWallet(w, self.config) for w in Wallet.query.all())
 
 	def wallet(self, id):
 		''' Возвращает конкретный кошелек '''
-		try:
-			return DbWallet(Wallet.query.filter_by(wallet_id=id).one())
-		except NoResultFound as err:
-			raise RuntimeError("Walet not found") from err
+		# @todo #146 Использовать one при конкретном запросе кошелька
+		#  Сейчас это не срабатывает, потому что не контролируется содержимое БД
+		#  Кошельки в БД дублируются
+		wallet = Wallet.query.filter_by(wallet_id=id).first()
+		if wallet is None:
+			raise RuntimeError("Walet not found")
+		return DbWallet(wallet, self.config)
 
 	def add(self, wallet):
 		''' Добавляет новый кошелек '''

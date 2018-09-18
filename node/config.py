@@ -13,6 +13,7 @@ PUBLIC_KEY = 'Replacethisstringtoproductionpublickey'
 STRENGTH = 3
 
 ZOLD_VERSION = '0.14.13'
+ZOLD_PROTOCOL = '2'
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
