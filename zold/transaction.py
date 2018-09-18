@@ -64,7 +64,7 @@ class IncomingTransaction:
 		return ''
 
 	def __getattr__(self, attr):
-		return self.transaction.__getattr__(attr)
+		return getattr(self.transaction, attr)
 
 
 class IncomingTransactions:
