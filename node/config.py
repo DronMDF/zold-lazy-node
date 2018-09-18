@@ -12,7 +12,7 @@ WALLET = '1234567887654321'
 PUBLIC_KEY = 'Replacethisstringtoproductionpublickey'
 STRENGTH = 3
 
-ZOLD_VERSION = '0.14.13'
+ZOLD_VERSION = '0.14.39'
 ZOLD_PROTOCOL = '2'
 
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
