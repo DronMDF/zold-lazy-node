@@ -6,36 +6,30 @@
 
 ''' Тестирование Работы с кошельками '''
 
+from flask_api import status
 from node.app import APP
 from zold.score import JsonScore
 from zold.score_props import ScoreValid
+from .test_wallet import FakeWallet
 
 
 class TestPutWallet:
 	''' Тестируем PUT /wallet/<id> '''
-	EMPTY_WALLET = '\n'.join((
-		'zold',
-		'1',
-		'cb91e8b5b4b66866',
-		''.join((
-			'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA2Z999vmvkavYi4Uh7uV2mPPKYMAKS',
-			'rnbO2Iwi97PlXOACocXYCaRaoWHCrbtHuKR3dtjrU9hVygvl0UlmeMnvilOLobMMIBrr+TTjp',
-			'bztHSKjXdhT7cxxWLMG5hqcaO9E6HxCpKXn/DbCK0il6nhcZGz/zciCa/vpo1WB05TWpIMcaR',
-			'ouI/uKLlQsglegD9OB3aiXuYWnYvJBOZIzuCf3/M/KljH6/MfopR6LlxbZgAWLEbLxn7r9OHE',
-			'eD+/2PX3DgD4OOtvvM9HSnvcoXNgL2MHyo6TzKmNE+BamwO5WfB8Wb71CED9k/qa9YOSMKPJH',
-			'MGkIEoFqF7G7hA+vsCbLp1MWtv0100GM/Vgxy5Ae/7g6EmYEUOgx7mIzWyKorHayWq5TBchFm',
-			'qGB6aTkMbhKKyfIl1djBe3TXAqXVq1nncuz25ZxybFwKA6Z52OB4S3tAWE5qRsnBe6ppoiY9/',
-			'FuwQRS9stIBoY3hEfo58BVxjnLTbymvV8bvgLYXLgtcjjyLhzmUyzXhJpzXgORVLsQLp7NA2q',
-			'gtUBQJdpyZHbbddiwHUnwQn8/Q+of5SpwJXdJOwtY25ME6e6DW/5SxZPnhU9GhR92M/RL0dGf',
-			'hRqgWSpu85CE0peNDgjcR4qzIGKlKVrGdcVn9yqLQznuNUb0y6PCtVMn9eL6PXmB35WMzUCAw',
-			'EAAQ=='
-		))
-	))
-
-	def test_server_return_score(self):
-		''' Сервер возвращает содержимое кошелька '''
+	def test_return_score(self):
+		''' В ответе сервер указывает свой score '''
+		wallet = FakeWallet()
 		response = APP.test_client().put(
-			'/wallet/cb91e8b5b4b66866',
-			data=self.EMPTY_WALLET
+			'/wallet/%s' % wallet.id(),
+			data=str(wallet)
 		)
 		assert ScoreValid(JsonScore(response.json['score']), APP.config)
+
+	def test_put_wallet_again(self):
+		''' Повторная загрузка кошелька не должна приводить к ошибке '''
+		wallet = FakeWallet()
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(wallet)
+		)
+		assert response.status_code == status.HTTP_200_OK
