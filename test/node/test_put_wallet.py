@@ -52,3 +52,18 @@ class TestPutWallet:
 		# Там могут быть левые транзакции, поэтому ищем нашу
 		print(response.json['body'])
 		assert str(TransactionString(transact)) in response.json['body']
+
+	def test_put_wallet_negative_balance(self):
+		'''
+		Загрузка кошелька с негативным балансом - не ошибка
+		но избыточные транзакции не проверяем и не сохраняем
+		'''
+		src_wallet = FakeWallet()
+		dst_wallet = FakeWallet()
+		transact = FakeTransaction(src_wallet, dst_wallet, -1000)
+		wallet = TransactionWallet(src_wallet, transact)
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/wallet/%s' % wallet.id())
+		assert response.status_code == status.HTTP_200_OK
+		# Транзакция не возвращается, поскольку не прошла проверку.
+		assert response.json['body'] == str(src_wallet)
