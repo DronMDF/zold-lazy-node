@@ -19,7 +19,7 @@ class DbWallet:
 		''' Идентификатор кошелька '''
 		return self.wallet.wallet_id
 
-	def body(self):
+	def __str__(self):
 		''' Заголовок кошелька '''
 		return '\n'.join((
 			self.wallet.network,
