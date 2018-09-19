@@ -9,6 +9,8 @@
 Кошельки
 '''
 
+from .transaction import StringTransaction, TransactionString
+
 
 class StringWallet:
 	''' Кошелек, представленный в виде строки '''
@@ -26,3 +28,24 @@ class StringWallet:
 	def public(self):
 		''' Публичный ключ '''
 		return self.wallet.split('\n')[3]
+
+	def transactions(self):
+		''' Список транзакций '''
+		return (StringTransaction(t) for t in self.wallet.split('\n')[5:])
+
+
+class TransactionWallet:
+	''' Декоратор для кошелька - добавляет транзакции '''
+	def __init__(self, wallet, *transactions):
+		self.wallet = wallet
+		self.transactions = transactions
+
+	def id(self):
+		''' Идентификатор кошелька '''
+		return self.wallet.id()
+
+	def __str__(self):
+		return '\n'.join((
+			str(self.wallet),
+			*[str(TransactionString(t)) for t in self.transactions]
+		))

@@ -99,13 +99,13 @@ class TransactionDstStatus(enum.Enum):
 class Transaction(DB.Model):
 	''' Транзакция '''
 	id = DB.Column(DB.Integer, primary_key=True)
-	transact_id = DB.Column(DB.Integer)
+	transaction_id = DB.Column(DB.Integer)
 	time = DB.Column(DB.DateTime)
+	# Размер суммы всегда отрицательный. Храним переводы.
+	amount = DB.Column(DB.Integer)
 	src_id = DB.Column(DB.String(16))
 	dst_prefix = DB.Column(DB.String(32))
 	dst_id = DB.Column(DB.String(16))
-	# Размер суммы всегда положительный. Храним переводы.
-	amount = DB.Column(DB.Integer)
 	details = DB.Column(DB.Text)
 	signature = DB.Column(DB.Text)
 

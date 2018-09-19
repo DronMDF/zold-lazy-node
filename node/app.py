@@ -14,11 +14,13 @@ from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
-from zold.wallet import StringWallet
-from node.db import DB
+from zold.transaction import IncomingTransactions, OrderedTransactions
+from zold.wallet import StringWallet, TransactionWallet
+from node.db import DB, TransactionDstStatus
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
-from node.wallet import DbWallets
 from node.remote import DbRemotes, IsRemoteUpdated
+from node.transaction import DbTransactions
+from node.wallet import DbWallets
 
 
 class JsonResponse(Response):
@@ -187,16 +189,25 @@ def api_remotes():
 @APP.route('/wallet/<wallet_id>', methods=['GET'])
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
-	# @todo #146 Кошелек формируется из всех транзакций по дате.
-	#  Исходящие транзакции у нас только проверенные.
-	#  Входящие транзакции только со статусом GOOD
-	#  И все сортируется по дате.
 	try:
 		data = {
 			'protocol': APP.config['ZOLD_PROTOCOL'],
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': DbWallets(APP.config).wallet(wallet_id).body(),
+			'body': str(TransactionWallet(
+				DbWallets(APP.config).wallet(wallet_id),
+				*OrderedTransactions(
+					itertools.chain(
+						DbTransactions().select(src_id=wallet_id),
+						IncomingTransactions(
+							DbTransactions().select(
+								dst_id=wallet_id,
+								dst_status=TransactionDstStatus.GOOD
+							)
+						)
+					)
+				)
+			)),
 			'score': StrongestScore(
 				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
 				APP.config
