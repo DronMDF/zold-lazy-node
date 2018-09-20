@@ -67,3 +67,31 @@ class TestPutWallet:
 		assert response.status_code == status.HTTP_200_OK
 		# Транзакция не возвращается, поскольку не прошла проверку.
 		assert response.json['body'] == str(src_wallet)
+
+	def test_put_wallet_negative_balance_partial(self):
+		'''
+		Загрузка кошелька с негативным балансом - не ошибка
+		но избыточные транзакции не проверяем и не сохраняем
+		Но хорошие принимаем
+		'''
+		root_wallet = RootWallet()
+		src_wallet = FakeWallet()
+		APP.test_client().put(
+			'/wallet/%s' % root_wallet.id(),
+			data=str(TransactionWallet(
+				root_wallet,
+				FakeTransaction(root_wallet, src_wallet, -1500)
+			))
+		)
+		dst_wallet = FakeWallet()
+		transaction1 = FakeTransaction(src_wallet, dst_wallet, -1000)
+		transaction2 = FakeTransaction(src_wallet, dst_wallet, -600)
+		APP.test_client().put(
+			'/wallet/%s' % src_wallet.id(),
+			data=str(TransactionWallet(src_wallet, transaction1, transaction2))
+		)
+		response = APP.test_client().get('/wallet/%s' % src_wallet.id())
+		assert response.status_code == status.HTTP_200_OK
+		assert str(TransactionString(transaction1)) in response.json['body']
+		# Вторая транзакция не должна проходить
+		assert str(TransactionString(transaction2)) not in response.json['body']

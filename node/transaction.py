@@ -15,6 +15,10 @@ class DbTransaction:
 	def __init__(self, transaction):
 		self.transaction = transaction
 
+	def dbref(self):
+		''' Идентификатор БД для обновления записей '''
+		return self.transaction.id
+
 	def id(self):
 		''' Идентификатор транзакции '''
 		return self.transaction.transaction_id
@@ -53,4 +57,11 @@ class DbTransactions:
 	def add(self, wallet_id, transaction):
 		''' Добавление транзакций в БД '''
 		DB.session.add(Transaction(wallet_id, transaction))
+		DB.session.commit()
+
+	def update(self, transaction, state):
+		''' Обновление состояния транзакции по отношению к получателю '''
+		Transaction.query.filter_by(
+			id=transaction.dbref()
+		).first().dst_status = state
 		DB.session.commit()

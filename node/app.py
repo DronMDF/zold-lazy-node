@@ -238,8 +238,19 @@ def api_put_wallet(wallet_id):
 		dbwallets.add(wallet)
 	# @todo #146 Входящие транзакции отсутствующие в БД фиксируются
 	#  в списке WantedWallet, который доступен через /tasks
-	# @todo #146 Непроверенные входящие транзакции проверяются здесь.
-	#  Это нужно для правильного определения бюджета.
+	# Проверка непроверенных входящих транзакций
+	unchecked = DbTransactions().select(
+		dst_id=wallet.id(),
+		dst_status=TransactionDstStatus.UNKNOWN
+	)
+	for tnx in unchecked:
+		DbTransactions().update(
+			tnx,
+			TransactionDstStatus.GOOD
+			if tnx.prefix() in wallet.public()
+			else TransactionDstStatus.BAD
+		)
+	# Определение доступного баланса
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
 	else:
