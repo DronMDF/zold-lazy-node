@@ -151,6 +151,15 @@ def api_tasks():
 				}
 				for r in DbRemotes()
 				if r.json()['id'] not in [w.id() for w in DbWallets(APP.config)]
+			],
+			[
+				{
+					'type': 'wanted',
+					'id': t.bnf(),
+					'prefix': t.prefix()
+				}
+				for t in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN)
+				if t.bnf() not in [w.id() for w in DbWallets(APP.config)]
 			]
 		))
 	}
