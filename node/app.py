@@ -18,6 +18,7 @@ from zold.transaction import (
 	IncomingTransactions,
 	OrderedTransactions,
 	OutgoingTransactions,
+	TransactionsAmount,
 	TransactionValid
 )
 from zold.wallet import StringWallet, TransactionWallet
@@ -239,11 +240,25 @@ def api_put_wallet(wallet_id):
 	#  в списке WantedWallet, который доступен через /tasks
 	# @todo #146 Непроверенные входящие транзакции проверяются здесь.
 	#  Это нужно для правильного определения бюджета.
+	if wallet.id() == '0000000000000000':
+		limit = 0xffffffffffffffff
+	else:
+		limit = int(TransactionsAmount(
+			IncomingTransactions(
+				DbTransactions().select(
+					dst_id=wallet.id(),
+					dst_status=TransactionDstStatus.GOOD
+				)
+			)
+		))
 	# @todo #157 При рассчете баланса необходимо учитывать транзакции из БД,
 	#  они могут быть упущены в кошельке
 	for tnx in OrderedTransactions(OutgoingTransactions(wallet.transactions())):
+		if limit < abs(tnx.amount()):
+			break
 		if TransactionValid(tnx, wallet):
 			DbTransactions().add(wallet.id(), tnx)
+			limit -= abs(tnx.amount())
 
 	data = {
 		'version': APP.config['ZOLD_VERSION'],

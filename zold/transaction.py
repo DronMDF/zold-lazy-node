@@ -143,3 +143,12 @@ class TransactionValid:
 		return PKCS1_v1_5.new(key).verify(SHA256.new(' '.join(
 			(bnf, transaction_id, time, amstr, prefix, bnf, details)
 		).encode('ascii')), base64.b64decode(self.transaction.signature()))
+
+
+class TransactionsAmount:
+	''' Общая сумма транзакций '''
+	def __init__(self, transactions):
+		self.transactions = transactions
+
+	def __int__(self):
+		return sum((t.amount() for t in self.transactions))
