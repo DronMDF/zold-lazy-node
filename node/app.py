@@ -14,7 +14,12 @@ from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
-from zold.transaction import IncomingTransactions, OrderedTransactions
+from zold.transaction import (
+	IncomingTransactions,
+	OrderedTransactions,
+	OutgoingTransactions,
+	TransactionValid
+)
 from zold.wallet import StringWallet, TransactionWallet
 from node.db import DB, TransactionDstStatus
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
@@ -234,9 +239,12 @@ def api_put_wallet(wallet_id):
 	#  в списке WantedWallet, который доступен через /tasks
 	# @todo #146 Непроверенные входящие транзакции проверяются здесь.
 	#  Это нужно для правильного определения бюджета.
-	# @todo #146 Обработка входящих транзакций прекращается при привышении бюджета
-	#  Транзакции отсортировываются по дате и проверяем только те,
-	#  которые проходят по бюджету.
+	# @todo #157 При рассчете баланса необходимо учитывать транзакции из БД,
+	#  они могут быть упущены в кошельке
+	for tnx in OrderedTransactions(OutgoingTransactions(wallet.transactions())):
+		if TransactionValid(tnx, wallet):
+			DbTransactions().add(wallet.id(), tnx)
+
 	data = {
 		'version': APP.config['ZOLD_VERSION'],
 		'protocol': APP.config['ZOLD_PROTOCOL'],

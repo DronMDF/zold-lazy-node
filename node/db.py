@@ -96,6 +96,7 @@ class TransactionDstStatus(enum.Enum):
 	GOOD = 2
 
 
+# pylint: disable=too-many-instance-attributes
 class Transaction(DB.Model):
 	''' Транзакция '''
 	id = DB.Column(DB.Integer, primary_key=True)
@@ -112,3 +113,15 @@ class Transaction(DB.Model):
 	# В БД попадают только транзакции с правильными сигнатурами.
 	# Но кошелька получателя в тот момент может еще не быть.
 	dst_status = DB.Column(DB.Enum(TransactionDstStatus))
+
+	def __init__(self, wallet_id, transaction):
+		self.transaction_id = transaction.id()
+		self.time = transaction.time().as_datetime()
+		self.amount = transaction.amount()
+		self.src_id = wallet_id
+		self.dst_prefix = transaction.prefix()
+		self.dst_id = transaction.bnf()
+		self.details = transaction.details()
+		self.signature = transaction.signature()
+
+		self.dst_status = TransactionDstStatus.UNKNOWN
