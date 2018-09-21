@@ -13,6 +13,7 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from zold.time import NowTime
+from zold.wallet import TransactionWallet
 
 
 # @todo #154 Перенести RootWallet в test/zold/test_wallet.py
@@ -153,3 +154,26 @@ class FakeTransaction:
 			self.bnf(),
 			self.details()
 		))).decode('ascii')
+
+
+class FullWallet:
+	'''
+	Кошелек с балансом
+	Кошелек не публикуется на сервер, для разных сценариев
+	Если проверяется содержимое с сервера - его надо опубликовать.
+	'''
+	def __init__(self, sponsor, amount, client):
+		self.wallet = FakeWallet()
+		client.put(
+			'/wallet/%s' % sponsor.id(),
+			data=str(TransactionWallet(
+				sponsor,
+				FakeTransaction(sponsor, self.wallet, -amount)
+			))
+		)
+
+	def __getattr__(self, attr):
+		return getattr(self.wallet, attr)
+
+	def __str__(self):
+		return str(self.wallet)

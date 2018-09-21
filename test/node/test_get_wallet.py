@@ -8,7 +8,7 @@
 
 from flask_api import status
 from node.app import APP
-from .test_wallet import RootWallet
+from .test_wallet import FakeWallet, FullWallet, RootWallet
 
 
 class TestGetWallet:
@@ -20,6 +20,17 @@ class TestGetWallet:
 
 	def test_wallet_ok(self):
 		''' Сервер возвращает содержимое кошелька '''
-		APP.test_client().put('/wallet/0000000000000000', data=str(RootWallet()))
-		response = APP.test_client().get('/wallet/0000000000000000')
+		wallet = FakeWallet()
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert response.status_code == status.HTTP_200_OK
+
+	def test_incoming_transaction_bnf_is_sender(self):
+		'''
+		Идентификатор корневого должен фигурировать в транзакции получателя
+		'''
+		root_wallet = RootWallet()
+		wallet = FullWallet(root_wallet, 1000, APP.test_client())
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/wallet/%s' % wallet.id())
+		assert root_wallet.id() in response.json['body']

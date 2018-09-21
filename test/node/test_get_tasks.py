@@ -10,8 +10,7 @@ from test.zold.test_score import FakeScore
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
-from zold.wallet import TransactionWallet
-from .test_wallet import FakeTransaction, FakeWallet, RootWallet
+from .test_wallet import FakeWallet, RootWallet, FullWallet
 
 
 class WalletScore:
@@ -73,15 +72,7 @@ class TestGetTasks:
 
 	def test_dst_wallet_to_wanted(self):
 		''' Кошельки получатели помещаются в список tasks '''
-		root_wallet = RootWallet()
-		wallet = FakeWallet()
-		APP.test_client().put(
-			'/wallet/%s' % root_wallet.id(),
-			data=str(TransactionWallet(
-				root_wallet,
-				FakeTransaction(root_wallet, wallet, -1000))
-			)
-		)
+		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
 		response = APP.test_client().get('/tasks')
 		assert any(
 			t['id'] == wallet.id() and t['prefix'] in wallet.public()

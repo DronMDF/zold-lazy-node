@@ -50,32 +50,6 @@ class StringTransaction:
 		return self.transaction.split(';')[6]
 
 
-class IncomingTransaction:
-	''' Входящая транзакция '''
-	def __init__(self, transaction):
-		self.transaction = transaction
-
-	def amount(self):
-		''' Транзакция имеет положительное значение '''
-		return -self.transaction.amount()
-
-	def signature(self):
-		''' Сигнатура пуста '''
-		return ''
-
-	def __getattr__(self, attr):
-		return getattr(self.transaction, attr)
-
-
-class IncomingTransactions:
-	''' Входящие транзакции '''
-	def __init__(self, transactions):
-		self.transactions = transactions
-
-	def __iter__(self):
-		return (IncomingTransaction(t) for t in self.transactions)
-
-
 class OrderedTransactions:
 	''' Список транзакций, упорядоченный по времени '''
 	def __init__(self, transactions):
