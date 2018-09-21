@@ -17,6 +17,7 @@ DB = SQLAlchemy()
 class Score(DB.Model):
 	''' Таблица Score для узла '''
 	id = DB.Column(DB.Integer, primary_key=True)
+	network = DB.Column(DB.Text, default='zold')
 	time = DB.Column(DB.DateTime)
 	host = DB.Column(DB.String(64))
 	port = DB.Column(DB.Integer)
@@ -35,6 +36,7 @@ class Score(DB.Model):
 class Suffix(DB.Model):
 	''' Суффиксы для Score's '''
 	id = DB.Column(DB.Integer, primary_key=True)
+	network = DB.Column(DB.Text, default='zold')
 	value = DB.Column(DB.String(32))
 	time = DB.Column(DB.DateTime)
 	score_id = DB.Column(DB.Integer, DB.ForeignKey('score.id'))
@@ -53,6 +55,7 @@ class Remote(DB.Model):
 	В случае прихода новой информации - узел обновляется.
 	'''
 	id = DB.Column(DB.Integer, primary_key=True)
+	network = DB.Column(DB.Text, default='zold')
 	time = DB.Column(DB.DateTime)
 	host = DB.Column(DB.String(64))
 	port = DB.Column(DB.Integer)
@@ -67,8 +70,8 @@ class Remote(DB.Model):
 class Wallet(DB.Model):
 	''' Кошелек '''
 	id = DB.Column(DB.Integer, primary_key=True)
-	wallet_id = DB.Column(DB.String(16), nullable=False)
 	network = DB.Column(DB.Text, default='zold')
+	wallet_id = DB.Column(DB.String(16), nullable=False)
 	public = DB.Column(DB.Text, nullable=False)
 
 	def __init__(self, wallet_id, network, public):
@@ -77,7 +80,7 @@ class Wallet(DB.Model):
 		self.public = public
 
 
-class WantedWallet(DB.Model):
+class Wanted(DB.Model):
 	'''
 	Кошелек, который необходимо найти
 	В эту таблицу попадают кошельки, кторые являются источниками транзакций
@@ -85,8 +88,11 @@ class WantedWallet(DB.Model):
 	эти транзакции, но должны оставить себе информацию для поиска.
 	'''
 	id = DB.Column(DB.Integer, primary_key=True)
-	wallet_id = DB.Column(DB.String(16), nullable=False)
 	network = DB.Column(DB.Text, default='zold')
+	wallet_id = DB.Column(DB.String(16), nullable=False)
+
+	def __init__(self, wallet_id):
+		self.wallet_id = wallet_id
 
 
 class TransactionDstStatus(enum.Enum):
@@ -100,6 +106,7 @@ class TransactionDstStatus(enum.Enum):
 class Transaction(DB.Model):
 	''' Транзакция '''
 	id = DB.Column(DB.Integer, primary_key=True)
+	network = DB.Column(DB.Text, default='zold')
 	transaction_id = DB.Column(DB.Integer)
 	time = DB.Column(DB.DateTime)
 	# Размер суммы всегда отрицательный. Храним переводы.

@@ -6,7 +6,7 @@
 
 ''' Работа с кошельками '''
 
-from node.db import DB, Wallet
+from node.db import DB, Wallet, Wanted
 
 
 class DbWallet:
@@ -51,4 +51,15 @@ class DbWallets:
 	def add(self, wallet):
 		''' Добавляет новый кошелек '''
 		DB.session.add(Wallet(wallet.id(), wallet.network(), wallet.public()))
+		DB.session.commit()
+
+
+class DbWanted:
+	''' Разыскиваемые кошельки '''
+	def __iter__(self):
+		return (w.wallet_id for w in Wanted.query.all())
+
+	def add(self, wallet_id):
+		''' Добавляет новый кошелек '''
+		DB.session.add(Wanted(wallet_id))
 		DB.session.commit()

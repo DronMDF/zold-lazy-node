@@ -12,8 +12,8 @@ import re
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-from zold.time import NowTime
 from zold.wallet import TransactionWallet
+from .test_transaction import FakeTransaction
 
 
 # @todo #154 Перенести RootWallet в test/zold/test_wallet.py
@@ -105,55 +105,6 @@ class FakeWallet:
 
 	def __str__(self):
 		return '\n'.join(('test', '2', self.id(), self.public(), ''))
-
-
-class FakeTransaction:
-	''' Транзакция '''
-	def __init__(self, src, dst, amount):
-		self.tm = NowTime()
-		self.zents = amount
-		self.src = src
-		self.pfx = dst.prefix()
-		self.dst = dst
-
-	def id(self):
-		''' Идентификатор транзакции '''
-		return 1
-
-	def time(self):
-		''' Время '''
-		return self.tm
-
-	def amount(self):
-		''' Баланс '''
-		return self.zents
-
-	def prefix(self):
-		''' Префикс '''
-		return self.pfx
-
-	def bnf(self):
-		''' Получатель '''
-		return self.dst.id()
-
-	def details(self):
-		''' Описание '''
-		return 'Test transaction'
-
-	def signature(self):
-		''' Сигнатура всегда вычисляется '''
-		amount = self.amount()
-		if amount < 0:
-			amount += 0x10000000000000000
-		return self.src.sign(' '.join((
-			self.bnf(),
-			'%04x' % self.id(),
-			str(self.time()),
-			'%016x' % amount,
-			self.prefix(),
-			self.bnf(),
-			self.details()
-		))).decode('ascii')
 
 
 class FullWallet:

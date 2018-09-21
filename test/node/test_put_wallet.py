@@ -12,7 +12,8 @@ from zold.score import JsonScore
 from zold.score_props import ScoreValid
 from zold.wallet import TransactionWallet
 from zold.transaction import TransactionString
-from .test_wallet import FakeTransaction, FakeWallet, RootWallet
+from .test_transaction import FakeTransaction
+from .test_wallet import FakeWallet, RootWallet
 
 
 class TestPutWallet:

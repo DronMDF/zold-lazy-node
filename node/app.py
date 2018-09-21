@@ -17,6 +17,7 @@ from zold.time import AheadTime
 from zold.transaction import (
 	OrderedTransactions,
 	OutgoingTransactions,
+	IncomingTransactions,
 	TransactionsAmount,
 	TransactionValid
 )
@@ -25,7 +26,7 @@ from node.db import DB, TransactionDstStatus
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
 from node.remote import DbRemotes, IsRemoteUpdated
 from node.transaction import DbTransactions
-from node.wallet import DbWallets
+from node.wallet import DbWallets, DbWanted
 
 
 class JsonResponse(Response):
@@ -129,6 +130,11 @@ def api_version():
 @APP.route('/tasks', methods=['GET'])
 def api_tasks():
 	''' Список задач для помошников '''
+	# @todo #155 Удалить из Wanted кошельки, которые обнаружены
+	#  Но вспоминаю, что хотел использовать Wanted для поиска транзакций
+	#  при наличии кошелька. Как это организовать?
+	# @todo #155 Удалить старые Score из таблиц
+	#  Здесь хорошее место, чтобы потратить немного времени на наведение порядка
 	data = {
 		'tasks': list(itertools.chain(
 			[
@@ -159,7 +165,8 @@ def api_tasks():
 				}
 				for t in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN)
 				if t.bnf() not in [w.id() for w in DbWallets(APP.config)]
-			]
+			],
+			[{'type': 'wanted', 'id': id} for id in DbWanted()]
 		))
 	}
 	return data
@@ -239,8 +246,10 @@ def api_put_wallet(wallet_id):
 		dbwallets.wallet(wallet.id())
 	except RuntimeError:
 		dbwallets.add(wallet)
-	# @todo #146 Входящие транзакции отсутствующие в БД фиксируются
-	#  в списке WantedWallet, который доступен через /tasks
+	# @todo #155 Среди входящих транзакций нужно форсить поиск только тех,
+	#  которых нет в БД
+	for tnx in IncomingTransactions(wallet.transactions()):
+		DbWanted().add(tnx.bnf())
 	# Проверка непроверенных входящих транзакций
 	unchecked = DbTransactions().select(
 		dst_id=wallet.id(),

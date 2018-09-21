@@ -68,6 +68,15 @@ class OutgoingTransactions:
 		return (t for t in self.transactions if t.amount() < 0)
 
 
+class IncomingTransactions:
+	''' Список входящих транзакций '''
+	def __init__(self, transactions):
+		self.transactions = transactions
+
+	def __iter__(self):
+		return (t for t in self.transactions if t.amount() > 0)
+
+
 class TransactionString:
 	''' Транзакция в виде строки '''
 	def __init__(self, transaction):
