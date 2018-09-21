@@ -6,7 +6,7 @@
 
 ''' Работа с транзакциями '''
 
-from node.db import DB, Transaction
+from node.db import DB, Transaction, TransactionDstStatus
 from zold.time import DatetimeTime
 
 
@@ -48,11 +48,48 @@ class DbTransaction:
 		return self.transaction.signature
 
 
+class IncomingDbTransaction:
+	''' Одна транзакция из БД '''
+	def __init__(self, transaction):
+		self.src_id = transaction.src_id
+		self.transaction = DbTransaction(transaction)
+
+	def amount(self):
+		''' сумма транзакции '''
+		return -self.transaction.amount()
+
+	def bnf(self):
+		''' соучастник '''
+		return self.src_id
+
+	def signature(self):
+		''' сигнатура '''
+		return ''
+
+	def __getattr__(self, attr):
+		return getattr(self.transaction, attr)
+
+
 class DbTransactions:
 	''' Коллекция транзакций в БД '''
 	def select(self, **query):
 		''' Выбор транзакций из БД '''
 		return (DbTransaction(t) for t in Transaction.query.filter_by(**query).all())
+
+	def incoming(self, wallet_id):
+		'''
+		Входящие транзакции из БД
+		В ней используется src_id в качестве bnf,
+		а через интерфейс транзакции эту информацию получить нельзя.
+		Этот метод возвращает только проверенные транзакции
+		'''
+		return (
+			IncomingDbTransaction(t)
+			for t in Transaction.query.filter_by(
+				dst_id=wallet_id,
+				dst_status=TransactionDstStatus.GOOD
+			).all()
+		)
 
 	def add(self, wallet_id, transaction):
 		''' Добавление транзакций в БД '''

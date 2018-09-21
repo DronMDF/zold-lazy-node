@@ -15,7 +15,6 @@ from zold.scores import WeakScores, NewerThenScores
 from zold.score_props import ScoreHash, ScoreValid, ScoreValue
 from zold.time import AheadTime
 from zold.transaction import (
-	IncomingTransactions,
 	OrderedTransactions,
 	OutgoingTransactions,
 	TransactionsAmount,
@@ -214,12 +213,7 @@ def api_get_wallet(wallet_id):
 				*OrderedTransactions(
 					itertools.chain(
 						DbTransactions().select(src_id=wallet_id),
-						IncomingTransactions(
-							DbTransactions().select(
-								dst_id=wallet_id,
-								dst_status=TransactionDstStatus.GOOD
-							)
-						)
+						DbTransactions().incoming(wallet_id)
 					)
 				)
 			)),
@@ -263,14 +257,7 @@ def api_put_wallet(wallet_id):
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
 	else:
-		limit = int(TransactionsAmount(
-			IncomingTransactions(
-				DbTransactions().select(
-					dst_id=wallet.id(),
-					dst_status=TransactionDstStatus.GOOD
-				)
-			)
-		))
+		limit = int(TransactionsAmount(DbTransactions().incoming(wallet.id())))
 	# @todo #157 При рассчете баланса необходимо учитывать транзакции из БД,
 	#  они могут быть упущены в кошельке
 	for tnx in OrderedTransactions(OutgoingTransactions(wallet.transactions())):
