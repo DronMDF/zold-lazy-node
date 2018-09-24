@@ -19,6 +19,7 @@ from zold.transaction import (
 	OutgoingTransactions,
 	IncomingTransactions,
 	TransactionsAmount,
+	TransactionString,
 	TransactionValid
 )
 from zold.wallet import StringWallet, TransactionWallet
@@ -241,15 +242,10 @@ def api_put_wallet(wallet_id):
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
 	wallet = StringWallet(request.get_data().decode('utf8'))
-	dbwallets = DbWallets(APP.config)
 	try:
-		dbwallets.wallet(wallet.id())
+		DbWallets(APP.config).wallet(wallet.id())
 	except RuntimeError:
-		dbwallets.add(wallet)
-	# @todo #155 Среди входящих транзакций нужно форсить поиск только тех,
-	#  которых нет в БД
-	for tnx in IncomingTransactions(wallet.transactions()):
-		DbWanted().add(tnx.bnf())
+		DbWallets(APP.config).add(wallet)
 	# Проверка непроверенных входящих транзакций
 	unchecked = DbTransactions().select(
 		dst_id=wallet.id(),
@@ -262,6 +258,17 @@ def api_put_wallet(wallet_id):
 			if tnx.prefix() in wallet.public()
 			else TransactionDstStatus.BAD
 		)
+	# Задачи на поиск неизвестных отправителей
+	for tnx in IncomingTransactions(wallet.transactions()):
+		# @todo #155 Поиск входяших транзакций не оптимален в плане скорости
+		if str(TransactionString(tnx)) not in (
+			str(TransactionString(t))
+			for t in DbTransactions().incoming(wallet.id())
+		):
+			# @todo #155 В списке wanted необходимо добавить резон
+			#  Резон описывает потребность в поиске. Когда эта
+			#  потребность удовлетворена - запись можно стирать.
+			DbWanted().add(tnx.bnf())
 	# Определение доступного баланса
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
@@ -290,7 +297,3 @@ def api_put_wallet(wallet_id):
 	#  Достоточно сложно будет перейти с одного на другой.
 	#  Клиент должен будет поддерживать оба.
 	return data, status.HTTP_200_OK
-
-
-if __name__ == '__main__':
-	APP.run(debug=True, host='0.0.0.0', port=5000)

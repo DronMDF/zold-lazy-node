@@ -19,8 +19,13 @@ class DbWallet:
 		''' Идентификатор кошелька '''
 		return self.wallet.wallet_id
 
+	def public(self):
+		''' Публичный ключ '''
+		return self.wallet.public
+
 	def __str__(self):
 		''' Заголовок кошелька '''
+		# @todo #??? Формирование строки должно делаться отдельно от кошелька
 		return '\n'.join((
 			self.wallet.network,
 			self.config['ZOLD_PROTOCOL'],

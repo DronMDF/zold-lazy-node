@@ -51,7 +51,6 @@ class TestPutWallet:
 		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert response.status_code == status.HTTP_200_OK
 		# Там могут быть левые транзакции, поэтому ищем нашу
-		print(response.json['body'])
 		assert str(TransactionString(transact)) in response.json['body']
 
 	def test_put_wallet_negative_balance(self):
