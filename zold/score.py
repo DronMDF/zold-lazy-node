@@ -110,6 +110,7 @@ class StrongestScore:
 		return self.score().suffixes()
 
 
+# @todo #175 ValueScore должен называться ValueScoreJson
 class ValueScore:
 	''' Score, который сопровождается значением Value '''
 	def __init__(self, score, config):

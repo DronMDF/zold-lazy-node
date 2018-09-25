@@ -9,7 +9,9 @@
 import re
 from random import randint
 from node.db import DB, Score, Suffix
-from zold.time import DatetimeTime
+from zold.time import AheadTime, DatetimeTime
+from zold.score import StrongestScore
+from zold.scores import NewerThenScores
 
 
 class DbScore:
@@ -121,3 +123,32 @@ class AtLeastOneDbScores:
 			DB.session.add(score)
 			DB.session.commit()
 			yield DbScore(score)
+
+
+class MainScore:
+	''' Главный score, который выдает сервер'''
+	def __init__(self, config):
+		self.score = StrongestScore(
+			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), config),
+			config
+		)
+
+	# @todo #175 MainScore должен делегировать запросы self.score
+	def time(self):
+		''' Получение времени '''
+		return self.score.json()['time']
+
+	def host(self):
+		''' Хост '''
+		return self.score.json()['host']
+
+	def port(self):
+		''' порт '''
+		return self.score.json()['port']
+
+	def invoice(self):
+		''' invoice '''
+		return self.score.json()['invoice']
+
+	def __getattr__(self, attr):
+		return getattr(self.score, attr)
