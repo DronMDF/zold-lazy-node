@@ -86,19 +86,6 @@ def api_root():
 			'queue_age': 0,
 			'speed': 0
 		},
-		'farm': {
-			'current': [
-				s.json()
-				for s in WeakScores(
-					AtLeastOneDbScores(
-						NewerThenScores(DbScores(), AheadTime(12)),
-						APP.config
-					),
-					16,
-					APP.config
-				)
-			]
-		},
 		'hours_alive': 1,
 		'load': 0.0,
 		'memory': 4 * 1024 * 1024,
