@@ -7,6 +7,7 @@
 ''' Тестовые транзакции '''
 
 from zold.time import NowTime
+from zold.transaction import TransactionData
 
 
 class FakeTransaction:
@@ -44,18 +45,7 @@ class FakeTransaction:
 
 	def signature(self):
 		''' Сигнатура всегда вычисляется '''
-		amount = self.amount()
-		if amount < 0:
-			amount += 0x10000000000000000
-		return self.src.sign(' '.join((
-			self.bnf(),
-			'%04x' % self.id(),
-			str(self.time()),
-			'%016x' % amount,
-			self.prefix(),
-			self.bnf(),
-			self.details()
-		))).decode('ascii')
+		return self.src.sign(str(TransactionData(self))).decode('ascii')
 
 
 class IncomingTransaction:

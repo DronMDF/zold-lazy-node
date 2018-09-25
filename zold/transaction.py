@@ -104,15 +104,12 @@ class TransactionString:
 		))
 
 
-class TransactionValid:
-	''' Состояние транзакции '''
-	def __init__(self, transaction, wallet):
+class TransactionData:
+	''' Данные транзакции для вычисления подписи '''
+	def __init__(self, transaction):
 		self.transaction = transaction
-		self.wallet = wallet
 
-	def __bool__(self):
-		# @todo #163 Формирование данных транзакции для подписи - типовая операция.
-		#  Повторяется например еще в test.node.test_wallet.FakeTransaction
+	def __str__(self):
 		transaction_id = '%04x' % self.transaction.id()
 		time = str(self.transaction.time())
 		amount = self.transaction.amount()
@@ -122,10 +119,21 @@ class TransactionValid:
 		prefix = self.transaction.prefix()
 		bnf = self.transaction.bnf()
 		details = self.transaction.details()
+		return ' '.join((bnf, transaction_id, time, amstr, prefix, bnf, details))
+
+
+class TransactionValid:
+	''' Состояние транзакции '''
+	def __init__(self, transaction, wallet):
+		self.transaction = transaction
+		self.wallet = wallet
+
+	def __bool__(self):
 		key = RSA.importKey(base64.b64decode(self.wallet.public()))
-		return PKCS1_v1_5.new(key).verify(SHA256.new(' '.join(
-			(bnf, transaction_id, time, amstr, prefix, bnf, details)
-		).encode('ascii')), base64.b64decode(self.transaction.signature()))
+		return PKCS1_v1_5.new(key).verify(
+			SHA256.new(str(TransactionData(self.transaction)).encode('ascii')),
+			base64.b64decode(self.transaction.signature())
+		)
 
 
 class TransactionsAmount:
