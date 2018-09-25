@@ -9,7 +9,7 @@
 Кошельки
 '''
 
-from .transaction import StringTransaction, TransactionString
+from .transaction import StringTransaction, TransactionString, TransactionValid
 
 
 class StringWallet:
@@ -39,6 +39,9 @@ class TransactionWallet:
 	def __init__(self, wallet, *transactions):
 		self.wallet = wallet
 		self.transactions = transactions
+		for tnx in transactions:
+			if tnx.amount() < 0 and not TransactionValid(tnx, wallet):
+				raise RuntimeError("Некорректная подпись транзакции")
 
 	def id(self):
 		''' Идентификатор кошелька '''

@@ -99,3 +99,29 @@ class TestGetTasks:
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)
+
+	def test_known_src_wallet_not_wanted(self):
+		''' Известные отправители отправители не помещаются в список tasks '''
+		src_wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		wallet = FakeWallet()
+		dst_wallet = FakeWallet()
+		src_transaction = FakeTransaction(src_wallet, dst_wallet, -777)
+		transaction = FakeTransaction(wallet, dst_wallet, -1500)
+		APP.test_client().put(
+			'/wallet/%s' % src_wallet.id(),
+			data=str(TransactionWallet(src_wallet, src_transaction))
+		)
+		APP.test_client().put(
+			'/wallet/%s' % dst_wallet.id(),
+			data=str(TransactionWallet(
+				dst_wallet,
+				IncomingTransaction(src_wallet, src_transaction),
+				IncomingTransaction(wallet, transaction),
+			))
+		)
+		response = APP.test_client().get('/tasks')
+		assert not any(
+			t['id'] == src_wallet.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
