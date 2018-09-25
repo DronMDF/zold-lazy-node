@@ -8,11 +8,14 @@
 ''' Утилита для обслуживания узла '''
 
 from datetime import datetime
+import hashlib
 import random
 import sys
 import time
+import traceback
 import requests
-from zold.score import JsonScore, MinedScore, XZoldScore
+import base58
+from zold.score import JsonScore, XZoldScore
 from zold.score_props import ScoreValid, ScoreValue
 from zold.time import StringTime
 
@@ -106,32 +109,62 @@ class ScenarioUpdate:
 
 class ScenarioMining:
 	''' Сценарий майнинга '''
+	def suffix_form(self, suffix_num):
+		''' Строковое представление номера, сейчас это 7-значная строка в base58 '''
+		return base58.b58encode(suffix_num.to_bytes(8, 'little'))[:7].decode('ascii')
+
+	def new_suffix(self, base, seed, strength):
+		''' Вычисление нового суффикса '''
+		return next((
+			xs
+			for xs in (
+				self.suffix_form(s)
+				for s in range(seed, seed + 1000000)
+			)
+			if hashlib.sha256(
+				(base + ' ' + xs).encode('ascii')
+			).hexdigest().endswith('0' * strength)
+		), None)
+
 	def run(self, args):
 		''' Основная процедура сценария '''
 		url = 'http://%s:%s' % tuple(args)
 
 		while True:
 			try:
-				# @todo #122 Информацию для майнинга необходимо запрашивать через /tasks
-				reply = requests.get(url)
+				info = requests.get(url)
+				if info.status_code != 200:
+					raise RuntimeError("Ошибка получения информации")
+				score = JsonScore(info.json()['score'])
+
+				reply = requests.get(url + '/tasks')
 				if reply.status_code != 200:
 					raise RuntimeError("Ошибка получения информации")
-				json_scores = reply.json().get('farm', {}).get('current', [])
-				if json_scores:
-					json_score = random.choice(json_scores)
+				tasks = [t for t in reply.json()['tasks'] if t['type'] == 'mining']
+				if tasks:
+					task_base = random.choice(tasks)['base']
 					start_time = datetime.now()
-					suffix = MinedScore(
-						JsonScore(json_score),
-						{'STRENGTH': json_score['strength']}
-					).suffixes()[-1]
+					suffix = self.new_suffix(
+						task_base,
+						random.randint(0, 0xffffffffffffffff),
+						score.json()['strength']
+					)
 					end_time = datetime.now()
-					print("Mined: %s take %.2f sec" % (
-						suffix,
-						(end_time - start_time).total_seconds()
-					))
-					requests.post(url + '/score', json={'suffix': suffix})
+					if suffix is not None:
+						print("%s: Mined: %s take %.2f sec" % (
+							end_time.isoformat(' '),
+							suffix,
+							(end_time - start_time).total_seconds()
+						))
+						requests.post(url + '/score', json={'suffix': suffix})
+					else:
+						print("%s: Mined: none in %.2f sec" % (
+							end_time.isoformat(' '),
+							(end_time - start_time).total_seconds(),
+						))
+					continue
 			except Exception as exc:
-				print(exc)
+				traceback.print_exc(exc)
 			time.sleep(60)
 
 
