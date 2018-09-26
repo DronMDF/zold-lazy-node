@@ -133,22 +133,5 @@ class MainScore:
 			config
 		)
 
-	# @todo #175 MainScore должен делегировать запросы self.score
-	def time(self):
-		''' Получение времени '''
-		return self.score.json()['time']
-
-	def host(self):
-		''' Хост '''
-		return self.score.json()['host']
-
-	def port(self):
-		''' порт '''
-		return self.score.json()['port']
-
-	def invoice(self):
-		''' invoice '''
-		return self.score.json()['invoice']
-
 	def __getattr__(self, attr):
 		return getattr(self.score, attr)

@@ -87,27 +87,30 @@ class JsonScore:
 class StrongestScore:
 	''' Самый мощный score из списка '''
 	def __init__(self, scores, config):
-		self.scores = scores
-		self.config = config
+		# @todo #178 Агрессивный конструктор StrongestScore
+		#  Класс предоставляет информацию по полям,
+		#  и делать ленивый поиск максимума не хочется.
+		self.score = max(scores, key=lambda s: int(ScoreValue(s, config)))
 
-	def score(self):
-		''' Фукнция возвращаем максимальный score '''
-		return max(self.scores, key=lambda s: int(ScoreValue(s, self.config)))
+	# @todo #175 StrongestScore должен делегировать запросы self.score
+	def time(self):
+		''' Получение времени '''
+		return self.score.json()['time']
 
-	def __str__(self):
-		return str(self.score())
+	def host(self):
+		''' Хост '''
+		return self.score.json()['host']
 
-	def json(self):
-		''' В виде json '''
-		return self.score().json()
+	def port(self):
+		''' порт '''
+		return self.score.json()['port']
 
-	def prefix(self):
-		''' Префиксная часть score '''
-		return self.score().prefix()
+	def invoice(self):
+		''' invoice '''
+		return self.score.json()['invoice']
 
-	def suffixes(self):
-		''' список суффиксов '''
-		return self.score().suffixes()
+	def __getattr__(self, attr):
+		return getattr(self.score, attr)
 
 
 # @todo #175 ValueScore должен называться ValueScoreJson
