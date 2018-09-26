@@ -7,6 +7,7 @@
 ''' Работа с кошельками '''
 
 from node.db import DB, Wallet, Wanted
+from zold.transaction import StringTransaction, TransactionString
 
 
 class DbWallet:
@@ -59,12 +60,35 @@ class DbWallets:
 		DB.session.commit()
 
 
+class DbWantedWallet:
+	''' Отдельная запись из таблицы поиска '''
+	def __init__(self, wanted):
+		self.wanted = wanted
+
+	def id(self):
+		''' Идентификатор разыскиваемого кошелька '''
+		return self.wanted.wallet_id
+
+	def transaction(self):
+		''' Транзакция, по которой разыскивается кошелек '''
+		return StringTransaction(self.wanted.transaction)
+
+	def who(self):
+		''' Кто запросил поиск транзакции '''
+		return self.wanted.who
+
+	def remove(self):
+		''' Удаление текущей записи'''
+		DB.session.delete(self.wanted)
+		DB.session.commit()
+
+
 class DbWanted:
 	''' Разыскиваемые кошельки '''
 	def __iter__(self):
-		return (w.wallet_id for w in Wanted.query.all())
+		return (DbWantedWallet(w) for w in Wanted.query.all())
 
-	def add(self, wallet_id):
+	def add(self, wallet_id, transaction, who):
 		''' Добавляет новый кошелек '''
-		DB.session.add(Wanted(wallet_id))
+		DB.session.add(Wanted(wallet_id, str(TransactionString(transaction)), who))
 		DB.session.commit()

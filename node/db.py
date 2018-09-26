@@ -90,9 +90,13 @@ class Wanted(DB.Model):
 	id = DB.Column(DB.Integer, primary_key=True)
 	network = DB.Column(DB.Text, default='zold')
 	wallet_id = DB.Column(DB.String(16), nullable=False)
+	transaction = DB.Column(DB.Text, nullable=False)
+	who = DB.Column(DB.String(16), nullable=False)
 
-	def __init__(self, wallet_id):
+	def __init__(self, wallet_id, transaction, who):
 		self.wallet_id = wallet_id
+		self.transaction = transaction
+		self.who = who
 
 
 class TransactionDstStatus(enum.Enum):
