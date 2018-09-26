@@ -79,7 +79,7 @@ class NRemotes:
 			except Exception as err:
 				print(host, "Failed:", err)
 				continue
-			rscore = XZoldScore(rremote.headers['X-Zold-Score'])
+			rscore = XZoldScore(rremote.headers.get('X-Zold-Score', ''))
 			if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
 				print(host, "Good host, update and get remotes...")
 				reply = requests.get(
