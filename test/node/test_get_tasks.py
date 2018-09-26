@@ -82,6 +82,17 @@ class TestGetTasks:
 			if t['type'] == 'wanted'
 		)
 
+	def test_dst_wallet_from_wanted(self):
+		''' Кошельки получатели удаляются из списка tasks '''
+		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/tasks')
+		assert not any(
+			t['id'] == wallet.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+
 	def test_src_wallet_to_wanted(self):
 		''' Кошельки отправители помещаются в список tasks '''
 		wallet = FakeWallet()
