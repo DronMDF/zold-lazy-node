@@ -10,9 +10,15 @@ import itertools
 from flask import Flask, jsonify, request, Response
 from flask_api import status
 from werkzeug.exceptions import NotAcceptable, BadRequest
-from zold.score import NextScore, StrongestScore, ValueScore, XZoldScore
+from zold.score import NextScore, ValueScore, XZoldScore
 from zold.scores import WeakScores, NewerThenScores
-from zold.score_props import ScoreHash, ScoreValid, ScoreValue
+from zold.score_props import (
+	ScoreHash,
+	ScoreJson,
+	ScoreString,
+	ScoreValid,
+	ScoreValue
+)
 from zold.time import AheadTime
 from zold.transaction import (
 	OrderedTransactions,
@@ -24,7 +30,7 @@ from zold.transaction import (
 )
 from zold.wallet import StringWallet, TransactionWallet
 from node.db import DB, TransactionDstStatus
-from node.score import AtLeastOneDbScores, DbScores, DbSavedScore
+from node.score import AtLeastOneDbScores, DbScores, DbSavedScore, MainScore
 from node.remote import DbRemotes, IsRemoteUpdated
 from node.transaction import DbTransactions
 from node.wallet import DbWallets, DbWanted
@@ -51,17 +57,15 @@ with APP.app_context():
 @APP.after_request
 def after_request(response):
 	''' Добавляем кастомный HTTP заголовок '''
-	score = StrongestScore(
-		AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-		APP.config
-	)
+	score = MainScore(APP.config)
 	response.headers.add('X-Zold-Version', APP.config['ZOLD_VERSION'])
+	# @todo #175 Для X-Zold-Score, нужен специальный XScoreString
 	response.headers.add(
 		'X-Zold-Score',
 		'%u/%u: %s' % (
 			ScoreValue(score, APP.config),
 			APP.config['STRENGTH'],
-			score
+			ScoreString(score)
 		)
 	)
 	return response
@@ -94,13 +98,7 @@ def api_root():
 		'protocol': 2,
 		# @todo #126 Передать реальное количество имеющихся узлов.
 		'remotes': 20,
-		'score': ValueScore(
-			StrongestScore(
-				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-				APP.config
-			),
-			APP.config
-		).json(),
+		'score': ValueScore(MainScore(APP.config), APP.config).json(),
 		'threads': '1/1',
 		'version': APP.config['ZOLD_VERSION'],
 		# @todo #126 Передать реальное количество имеющихся кошельков.
@@ -188,10 +186,7 @@ def api_remotes():
 		'version': APP.config['ZOLD_VERSION'],
 		# @todo #105 Нужно выбрать только актуальные Remote (последних суток)
 		'all': [r.json() for r in DbRemotes()],
-		'score': StrongestScore(
-			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-			APP.config
-		).json()
+		'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 	}
 
 
@@ -212,10 +207,7 @@ def api_get_wallet(wallet_id):
 					)
 				)
 			)),
-			'score': StrongestScore(
-				AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-				APP.config
-			).json()
+			'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 		}
 	except RuntimeError:
 		data = {}
@@ -274,10 +266,7 @@ def api_put_wallet(wallet_id):
 		'version': APP.config['ZOLD_VERSION'],
 		'protocol': APP.config['ZOLD_PROTOCOL'],
 		'id': wallet_id,
-		'score': StrongestScore(
-			AtLeastOneDbScores(NewerThenScores(DbScores(), AheadTime(24)), APP.config),
-			APP.config
-		).json()
+		'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 	}
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.
 	#  Но текущий клиент рассчитывает, что сервер отвечает кодом HTTP_200_OK.

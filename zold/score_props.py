@@ -57,3 +57,36 @@ class ScoreValid:
 		except Exception:
 			return False
 		return True
+
+
+class ScoreString:
+	''' Score в виде строки '''
+	def __init__(self, score):
+		self.score = score
+
+	def __str__(self):
+		return ' '.join((
+			str(self.score.time()),
+			self.score.host(),
+			str(self.score.port()),
+			self.score.invoice(),
+			*self.score.suffixes()
+		))
+
+
+class ScoreJson:
+	''' Score в виде json '''
+	def __init__(self, score, strength):
+		self.score = score
+		self.strength = strength
+
+	def json(self):
+		''' Json представление '''
+		return {
+			'time': str(self.score.time()),
+			'host': self.score.host(),
+			'port': self.score.port(),
+			'invoice': self.score.invoice(),
+			'suffixes': self.score.suffixes(),
+			'strength': self.strength
+		}
