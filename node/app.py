@@ -150,9 +150,10 @@ def api_tasks():
 			],
 			[
 				{
-					'type': 'find',
+					'type': 'wanted',
 					'id': r.json()['id'],
-					'prefix': r.json()['prefix']
+					'prefix': r.json()['prefix'],
+					'transaction': ''
 				}
 				for r in DbRemotes()
 				if r.json()['id'] not in [w.id() for w in DbWallets(APP.config)]
