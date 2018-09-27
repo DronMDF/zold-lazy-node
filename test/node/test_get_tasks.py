@@ -11,6 +11,7 @@ from flask_api import status
 from node.app import APP
 from node.db import DB, Score
 from zold.wallet import TransactionWallet
+from zold.transaction import TransactionString
 from .test_wallet import FakeWallet, RootWallet, FullWallet
 from .test_transaction import IncomingTransaction, FakeTransaction
 
@@ -82,6 +83,17 @@ class TestGetTasks:
 			if t['type'] == 'wanted'
 		)
 
+	def test_dst_wallet_from_wanted(self):
+		''' Кошельки получатели удаляются из списка tasks '''
+		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/tasks')
+		assert not any(
+			t['id'] == wallet.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+
 	def test_src_wallet_to_wanted(self):
 		''' Кошельки отправители помещаются в список tasks '''
 		wallet = FakeWallet()
@@ -122,6 +134,52 @@ class TestGetTasks:
 		response = APP.test_client().get('/tasks')
 		assert not any(
 			t['id'] == src_wallet.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+
+	def test_src_wallet_from_wanted(self):
+		''' В случае поступления транзакции, запись убирается из поиск '''
+		swallet = FullWallet(RootWallet(), 3000, APP.test_client())
+		dwallet = FakeWallet()
+		transaction1 = FakeTransaction(swallet, dwallet, -777)
+		transaction2 = FakeTransaction(swallet, dwallet, -1500)
+		APP.test_client().put(
+			'/wallet/%s' % dwallet.id(),
+			data=str(TransactionWallet(
+				dwallet,
+				IncomingTransaction(swallet, transaction1),
+				IncomingTransaction(swallet, transaction2),
+			))
+		)
+		print(str(TransactionWallet(
+			dwallet,
+			IncomingTransaction(swallet, transaction1),
+			IncomingTransaction(swallet, transaction2),
+		)))
+		APP.test_client().put(
+			'/wallet/%s' % swallet.id(),
+			data=str(TransactionWallet(swallet, transaction2))
+		)
+		response = APP.test_client().get('/tasks')
+		print(response.json)
+		assert any(
+			all((
+				t['id'] == swallet.id(),
+				t['transaction'] == str(
+					TransactionString(IncomingTransaction(swallet, transaction1))
+				)
+			))
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+		assert not any(
+			all((
+				t['id'] == swallet.id(),
+				t['transaction'] == str(
+					TransactionString(IncomingTransaction(swallet, transaction2))
+				)
+			))
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)

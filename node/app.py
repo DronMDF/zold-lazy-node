@@ -116,9 +116,23 @@ def api_version():
 @APP.route('/tasks', methods=['GET'])
 def api_tasks():
 	''' Список задач для помошников '''
-	# @todo #155 Удалить из Wanted кошельки, которые обнаружены
-	#  Но вспоминаю, что хотел использовать Wanted для поиска транзакций
-	#  при наличии кошелька. Как это организовать?
+	# Проверка непроверенных входящих транзакций
+	for wnt in DbWanted():
+		for tnx in DbTransactions().select(
+			dst_id=wnt.who(),
+			dst_status=TransactionDstStatus.UNKNOWN
+		):
+			DbTransactions().update(
+				tnx,
+				TransactionDstStatus.GOOD
+				if tnx.prefix() in DbWallets(APP.config).wallet(wnt.who()).public()
+				else TransactionDstStatus.BAD
+			)
+		if str(TransactionString(wnt.transaction())) in (
+			str(TransactionString(t))
+			for t in DbTransactions().incoming(wnt.who())
+		):
+			wnt.remove()
 	# @todo #155 Удалить старые Score из таблиц
 	#  Здесь хорошее место, чтобы потратить немного времени на наведение порядка
 	data = {
@@ -147,12 +161,19 @@ def api_tasks():
 				{
 					'type': 'wanted',
 					'id': t.bnf(),
-					'prefix': t.prefix()
+					'prefix': t.prefix(),
+					'transaction': str(TransactionString(t))
 				}
 				for t in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN)
-				if t.bnf() not in [w.id() for w in DbWallets(APP.config)]
 			],
-			[{'type': 'wanted', 'id': id} for id in DbWanted()]
+			[
+				{
+					'type': 'wanted',
+					'id': w.id(),
+					'transaction': str(TransactionString(w.transaction()))
+				}
+				for w in DbWanted()
+			]
 		))
 	}
 	return data
@@ -247,7 +268,7 @@ def api_put_wallet(wallet_id):
 			# @todo #155 В списке wanted необходимо добавить резон
 			#  Резон описывает потребность в поиске. Когда эта
 			#  потребность удовлетворена - запись можно стирать.
-			DbWanted().add(tnx.bnf())
+			DbWanted().add(tnx.bnf(), tnx, wallet.id())
 	# Определение доступного баланса
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
