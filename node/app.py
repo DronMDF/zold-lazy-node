@@ -118,19 +118,15 @@ def api_tasks():
 	''' Список задач для помошников '''
 	# Проверка непроверенных входящих транзакций
 	for wnt in DbWanted():
-		for tnx in DbTransactions().select(
-			dst_id=wnt.who(),
-			dst_status=TransactionDstStatus.UNKNOWN
-		):
-			DbTransactions().update(
-				tnx,
-				TransactionDstStatus.GOOD
-				if tnx.prefix() in DbWallets(APP.config).wallet(wnt.who()).public()
-				else TransactionDstStatus.BAD
-			)
+		wallet = DbWallets(APP.config).wallet(wnt.who())
+		for tnx in DbTransactions().unapproved(wallet.id()):
+			if tnx.prefix() in wallet.public():
+				tnx.update(TransactionDstStatus.GOOD)
+			else:
+				tnx.update(TransactionDstStatus.BAD)
 		if str(TransactionString(wnt.transaction())) in (
 			str(TransactionString(t))
-			for t in DbTransactions().incoming(wnt.who())
+			for t in DbTransactions().incoming(wallet.id())
 		):
 			wnt.remove()
 	# @todo #155 Удалить старые Score из таблиц
@@ -215,12 +211,16 @@ def api_remotes():
 def api_get_wallet(wallet_id):
 	''' Содержимое кошелька '''
 	try:
-		data = {
+		wallet = DbWallets(APP.config).wallet(wallet_id)
+		for tnx in DbTransactions().unapproved(wallet_id):
+			if tnx.prefix() in wallet.public():
+				tnx.update(TransactionDstStatus.GOOD)
+		return {
 			'protocol': APP.config['ZOLD_PROTOCOL'],
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
 			'body': str(TransactionWallet(
-				DbWallets(APP.config).wallet(wallet_id),
+				wallet,
 				*OrderedTransactions(
 					itertools.chain(
 						DbTransactions().select(src_id=wallet_id),
@@ -231,9 +231,7 @@ def api_get_wallet(wallet_id):
 			'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 		}
 	except RuntimeError:
-		data = {}
-		return data, 404
-	return data
+		return {}, 404
 
 
 @APP.route('/wallet/<wallet_id>', methods=['PUT'])
@@ -247,17 +245,9 @@ def api_put_wallet(wallet_id):
 	except RuntimeError:
 		DbWallets(APP.config).add(wallet)
 	# Проверка непроверенных входящих транзакций
-	unchecked = DbTransactions().select(
-		dst_id=wallet.id(),
-		dst_status=TransactionDstStatus.UNKNOWN
-	)
-	for tnx in unchecked:
-		DbTransactions().update(
-			tnx,
-			TransactionDstStatus.GOOD
-			if tnx.prefix() in wallet.public()
-			else TransactionDstStatus.BAD
-		)
+	for tnx in DbTransactions().unapproved(wallet_id):
+		if tnx.prefix() in wallet.public():
+			tnx.update(TransactionDstStatus.GOOD)
 	# Задачи на поиск неизвестных отправителей
 	for tnx in IncomingTransactions(wallet.transactions()):
 		# @todo #155 Поиск входяших транзакций не оптимален в плане скорости

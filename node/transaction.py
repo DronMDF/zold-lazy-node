@@ -47,6 +47,11 @@ class DbTransaction:
 		''' сигнатура '''
 		return self.transaction.signature
 
+	def update(self, status):
+		''' Обновление состояния транзакции '''
+		self.transaction.dst_status = status
+		DB.session.commit()
+
 
 class IncomingDbTransaction:
 	''' Одна транзакция из БД '''
@@ -91,14 +96,17 @@ class DbTransactions:
 			).all()
 		)
 
+	def unapproved(self, wallet_id):
+		''' Неподтвержденные через получателей транзакции '''
+		return (
+			DbTransaction(t)
+			for t in Transaction.query.filter_by(
+				dst_id=wallet_id,
+				dst_status=TransactionDstStatus.UNKNOWN
+			).all()
+		)
+
 	def add(self, wallet_id, transaction):
 		''' Добавление транзакций в БД '''
 		DB.session.add(Transaction(wallet_id, transaction))
-		DB.session.commit()
-
-	def update(self, transaction, state):
-		''' Обновление состояния транзакции по отношению к получателю '''
-		Transaction.query.filter_by(
-			id=transaction.dbref()
-		).first().dst_status = state
 		DB.session.commit()
