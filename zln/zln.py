@@ -168,6 +168,31 @@ class ScenarioMining:
 			time.sleep(60)
 
 
+class ScenarioSync:
+	''' Сценарий синхронизации содержимого кошельков '''
+	def run(self, args):
+		''' Основная процедура сценария '''
+		url = 'http://%s:%s' % tuple(args)
+		uplink = 'http://b2.zold.io:4096'
+
+		root = requests.get(uplink + '/wallet/0000000000000000')
+		requests.put(url + '/wallet/0000000000000000', data=root.json()['body'])
+		print(datetime.now().isoformat(' '), '0000000000000000', 'Ok')
+
+		while True:
+			tasks = requests.get(url + '/tasks')
+			task = random.choice([
+				t
+				for t in tasks.json()['tasks']
+				if t['type'] == 'wanted'
+			])
+
+			wallet = requests.get(uplink + '/wallet/%s' % task['id'])
+			if wallet.status_code == 200:
+				requests.put(url + '/wallet/%s' % task['id'], data=wallet.json()['body'])
+				print(datetime.now().isoformat(' '), task['id'], 'Ok')
+
+
 class Scenarios:
 	''' Метасценарий, разрыливает на нижележащие '''
 	def __init__(self, **scenarios):
@@ -181,5 +206,6 @@ class Scenarios:
 
 Scenarios(
 	update=ScenarioUpdate(),
-	mine=ScenarioMining()
+	mine=ScenarioMining(),
+	sync=ScenarioSync()
 ).run(sys.argv[1:])

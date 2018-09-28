@@ -45,7 +45,9 @@ class FakeTransaction:
 
 	def signature(self):
 		''' Сигнатура всегда вычисляется '''
-		return self.src.sign(str(TransactionData(self))).decode('ascii')
+		return self.src.sign(
+			str(TransactionData(self.src.id(), self))
+		).decode('ascii')
 
 
 class IncomingTransaction:

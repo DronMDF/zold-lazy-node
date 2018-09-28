@@ -31,7 +31,7 @@ class StringWallet:
 
 	def transactions(self):
 		''' Список транзакций '''
-		return (StringTransaction(t) for t in self.wallet.split('\n')[5:])
+		return (StringTransaction(t) for t in self.wallet.split('\n')[5:] if t)
 
 
 class TransactionWallet:
