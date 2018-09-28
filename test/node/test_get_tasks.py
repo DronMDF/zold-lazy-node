@@ -17,7 +17,7 @@ from .test_transaction import IncomingTransaction, FakeTransaction
 
 
 class WalletScore:
-	''' Score для кошулька '''
+	''' Score для кошeлька '''
 	def __init__(self, wallet):
 		self.wallet = wallet
 
@@ -54,7 +54,7 @@ class TestGetTasks:
 		assert any(
 			t['id'] == wallet.id() and t['prefix'] in wallet.public()
 			for t in response.json['tasks']
-			if t['type'] == 'find'
+			if t['type'] == 'wanted'
 		)
 
 	def test_remotes_not_need_tasks(self):
@@ -70,7 +70,7 @@ class TestGetTasks:
 		assert not any(
 			t['id'] == wallet.id()
 			for t in response.json['tasks']
-			if t['type'] == 'find'
+			if t['type'] == 'wanted'
 		)
 
 	def test_dst_wallet_to_wanted(self):
@@ -152,17 +152,11 @@ class TestGetTasks:
 				IncomingTransaction(swallet, transaction2),
 			))
 		)
-		print(str(TransactionWallet(
-			dwallet,
-			IncomingTransaction(swallet, transaction1),
-			IncomingTransaction(swallet, transaction2),
-		)))
 		APP.test_client().put(
 			'/wallet/%s' % swallet.id(),
 			data=str(TransactionWallet(swallet, transaction2))
 		)
 		response = APP.test_client().get('/tasks')
-		print(response.json)
 		assert any(
 			all((
 				t['id'] == swallet.id(),
