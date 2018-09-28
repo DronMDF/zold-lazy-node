@@ -7,13 +7,14 @@
 ''' Тестирование Работы со списком задач '''
 
 from test.zold.test_score import FakeScore
+from test.zold.test_transaction import BadPrefixTransaction, FakeTransaction
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
 from zold.wallet import TransactionWallet
 from zold.transaction import TransactionString
 from .test_wallet import FakeWallet, RootWallet, FullWallet
-from .test_transaction import IncomingTransaction, FakeTransaction
+from .test_transaction import IncomingTransaction
 
 
 class WalletScore:
@@ -90,6 +91,26 @@ class TestGetTasks:
 		response = APP.test_client().get('/tasks')
 		assert not any(
 			t['id'] == wallet.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+
+	def test_dst_wallet_from_wanted_if_not_match(self):
+		'''
+		Кошельки получатели удаляются из списка tasks,
+		даже если не совпадает префикс
+		'''
+		src = FullWallet(RootWallet(), 1000, APP.test_client())
+		dst = FakeWallet()
+		transaction = BadPrefixTransaction(src, dst, -100)
+		APP.test_client().put(
+			'/wallet/%s' % src.id(),
+			data=str(TransactionWallet(src, transaction))
+		)
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(dst))
+		response = APP.test_client().get('/tasks')
+		assert not any(
+			t['id'] in [src.id(), dst.id()]
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)

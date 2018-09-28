@@ -116,7 +116,16 @@ def api_version():
 @APP.route('/tasks', methods=['GET'])
 def api_tasks():
 	''' Список задач для помошников '''
-	# Проверка непроверенных входящих транзакций
+	# Проверка непроверенных исходящих,
+	for tnx in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN):
+		try:
+			if tnx.prefix() in DbWallets(APP.config).wallet(tnx.bnf()).public():
+				tnx.update(TransactionDstStatus.GOOD)
+			else:
+				tnx.update(TransactionDstStatus.BAD)
+		except Exception:
+			pass
+	# @todo #191: Необходимо очистить Wanted от транзакций, которые уже есть
 	for wnt in DbWanted():
 		wallet = DbWallets(APP.config).wallet(wnt.who())
 		for tnx in DbTransactions().unapproved(wallet.id()):
@@ -149,7 +158,8 @@ def api_tasks():
 					'type': 'wanted',
 					'id': r.json()['id'],
 					'prefix': r.json()['prefix'],
-					'transaction': ''
+					'transaction': '',
+					'reason': 'remote'
 				}
 				for r in DbRemotes()
 				if r.json()['id'] not in [w.id() for w in DbWallets(APP.config)]
@@ -159,7 +169,8 @@ def api_tasks():
 					'type': 'wanted',
 					'id': t.bnf(),
 					'prefix': t.prefix(),
-					'transaction': str(TransactionString(t))
+					'transaction': str(TransactionString(t)),
+					'reason': 'dst unknown'
 				}
 				for t in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN)
 			],
@@ -167,7 +178,8 @@ def api_tasks():
 				{
 					'type': 'wanted',
 					'id': w.id(),
-					'transaction': str(TransactionString(w.transaction()))
+					'transaction': str(TransactionString(w.transaction())),
+					'reason': 'wanted'
 				}
 				for w in DbWanted()
 			]
