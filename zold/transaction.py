@@ -106,20 +106,20 @@ class TransactionString:
 
 class TransactionData:
 	''' Данные транзакции для вычисления подписи '''
-	def __init__(self, transaction):
+	def __init__(self, wallet_id, transaction):
+		self.wallet_id = wallet_id
 		self.transaction = transaction
 
 	def __str__(self):
-		transaction_id = '%04x' % self.transaction.id()
-		time = str(self.transaction.time())
-		amount = self.transaction.amount()
-		if amount < 0:
-			amount += 0x10000000000000000
-		amstr = '%016x' % amount
-		prefix = self.transaction.prefix()
-		bnf = self.transaction.bnf()
-		details = self.transaction.details()
-		return ' '.join((bnf, transaction_id, time, amstr, prefix, bnf, details))
+		return '%s %d %s %d %s %s %s' % (
+			self.wallet_id,
+			self.transaction.id(),
+			self.transaction.time(),
+			self.transaction.amount(),
+			self.transaction.prefix(),
+			self.transaction.bnf(),
+			self.transaction.details()
+		)
 
 
 class TransactionValid:
@@ -130,8 +130,9 @@ class TransactionValid:
 
 	def __bool__(self):
 		key = RSA.importKey(base64.b64decode(self.wallet.public()))
+		data = TransactionData(self.wallet.id(), self.transaction)
 		return PKCS1_v1_5.new(key).verify(
-			SHA256.new(str(TransactionData(self.transaction)).encode('ascii')),
+			SHA256.new(str(data).encode('ascii')),
 			base64.b64decode(self.transaction.signature())
 		)
 

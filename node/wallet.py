@@ -86,7 +86,13 @@ class DbWantedWallet:
 class DbWanted:
 	''' Разыскиваемые кошельки '''
 	def __iter__(self):
-		return (DbWantedWallet(w) for w in Wanted.query.all())
+		try:
+			return (DbWantedWallet(w) for w in Wanted.query.all())
+		except Exception:
+			return self
+
+	def __next__(self):
+		raise StopIteration
 
 	def add(self, wallet_id, transaction, who):
 		''' Добавляет новый кошелек '''
