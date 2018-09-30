@@ -122,6 +122,24 @@ class TransactionData:
 		)
 
 
+class TransactionEqual:
+	''' True, если транзакции равны '''
+	def __init__(self, tnx1, tnx2):
+		self.tnx1 = tnx1
+		self.tnx2 = tnx2
+
+	def __bool__(self):
+		return all((
+			self.tnx1.id() == self.tnx2.id(),
+			self.tnx1.time().as_datetime() == self.tnx2.time().as_datetime(),
+			self.tnx1.amount() == self.tnx2.amount(),
+			self.tnx1.prefix() == self.tnx2.prefix(),
+			self.tnx1.bnf() == self.tnx2.bnf(),
+			self.tnx1.details() == self.tnx2.details(),
+			self.tnx1.signature() == self.tnx2.signature()
+		))
+
+
 class TransactionValid:
 	''' Состояние транзакции '''
 	def __init__(self, transaction, wallet):
@@ -134,6 +152,19 @@ class TransactionValid:
 		return PKCS1_v1_5.new(key).verify(
 			SHA256.new(str(data).encode('ascii')),
 			base64.b64decode(self.transaction.signature())
+		)
+
+
+class TransactionIn:
+	''' Проверка транзакции на попадание в список '''
+	def __init__(self, transaction, transactions):
+		self.transaction = transaction
+		self.transactions = transactions
+
+	def __bool__(self):
+		return any(
+			TransactionEqual(self.transaction, t)
+			for t in self.transactions
 		)
 
 

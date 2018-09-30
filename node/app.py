@@ -25,6 +25,7 @@ from zold.transaction import (
 	OutgoingTransactions,
 	IncomingTransactions,
 	TransactionsAmount,
+	TransactionIn,
 	TransactionString,
 	TransactionValid
 )
@@ -125,18 +126,8 @@ def api_tasks():
 				tnx.update(TransactionDstStatus.BAD)
 		except Exception:
 			pass
-	# @todo #191: Необходимо очистить Wanted от транзакций, которые уже есть
 	for wnt in DbWanted():
-		wallet = DbWallets(APP.config).wallet(wnt.who())
-		for tnx in DbTransactions().unapproved(wallet.id()):
-			if tnx.prefix() in wallet.public():
-				tnx.update(TransactionDstStatus.GOOD)
-			else:
-				tnx.update(TransactionDstStatus.BAD)
-		if str(TransactionString(wnt.transaction())) in (
-			str(TransactionString(t))
-			for t in DbTransactions().incoming(wallet.id())
-		):
+		if TransactionIn(wnt.transaction(), DbTransactions().incoming(wnt.who())):
 			wnt.remove()
 	# @todo #155 Удалить старые Score из таблиц
 	#  Здесь хорошее место, чтобы потратить немного времени на наведение порядка
@@ -263,15 +254,9 @@ def api_put_wallet(wallet_id):
 			tnx.update(TransactionDstStatus.GOOD)
 	# Задачи на поиск неизвестных отправителей
 	for tnx in IncomingTransactions(wallet.transactions()):
-		# @todo #155 Поиск входяших транзакций не оптимален в плане скорости
-		if str(TransactionString(tnx)) not in (
-			str(TransactionString(t))
-			for t in DbTransactions().incoming(wallet.id())
-		):
-			# @todo #155 В списке wanted необходимо добавить резон
-			#  Резон описывает потребность в поиске. Когда эта
-			#  потребность удовлетворена - запись можно стирать.
-			DbWanted().add(tnx.bnf(), tnx, wallet.id())
+		if tnx.prefix() in wallet.public():
+			if not TransactionIn(tnx, DbTransactions().incoming(wallet.id())):
+				DbWanted().add(tnx.bnf(), tnx, wallet.id())
 	# Определение доступного баланса
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
