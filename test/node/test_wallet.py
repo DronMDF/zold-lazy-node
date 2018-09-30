@@ -9,11 +9,11 @@
 import base64
 import random
 import re
+from test.zold.test_transaction import FakeTransaction
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from zold.wallet import TransactionWallet
-from .test_transaction import FakeTransaction
 
 
 # @todo #154 Перенести RootWallet в test/zold/test_wallet.py

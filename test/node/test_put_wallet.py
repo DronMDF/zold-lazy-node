@@ -6,13 +6,13 @@
 
 ''' Тестирование Работы с кошельками '''
 
+from test.zold.test_transaction import FakeTransaction
 from flask_api import status
 from node.app import APP
 from zold.score import JsonScore
 from zold.score_props import ScoreValid
 from zold.wallet import TransactionWallet
 from zold.transaction import TransactionString
-from .test_transaction import FakeTransaction
 from .test_wallet import FakeWallet, RootWallet
 
 
