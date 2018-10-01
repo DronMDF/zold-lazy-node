@@ -133,6 +133,29 @@ class TestGetTasks:
 			if t['type'] == 'wanted'
 		)
 
+	def test_src_wallet_wanted_once(self):
+		'''
+		Известные отправители отправители помещаются в список tasks
+		только один раз
+		'''
+		src = FakeWallet()
+		dst = FakeWallet()
+		transaction = FakeTransaction(src, dst, -777)
+		APP.test_client().put(
+			'/wallet/%s' % dst.id(),
+			data=str(TransactionWallet(dst, IncomingTransaction(src, transaction)))
+		)
+		APP.test_client().put(
+			'/wallet/%s' % dst.id(),
+			data=str(TransactionWallet(dst, IncomingTransaction(src, transaction)))
+		)
+		response = APP.test_client().get('/tasks')
+		assert len([
+			t
+			for t in response.json['tasks']
+			if t['type'] == 'wanted' and t['id'] == src.id()
+		]) == 1
+
 	def test_known_src_wallet_not_wanted(self):
 		''' Известные отправители отправители не помещаются в список tasks '''
 		src_wallet = FullWallet(RootWallet(), 1000, APP.test_client())

@@ -117,7 +117,7 @@ def api_version():
 @APP.route('/tasks', methods=['GET'])
 def api_tasks():
 	''' Список задач для помошников '''
-	# Проверка непроверенных исходящих,
+	# Проверка непроверенных исходящих
 	for tnx in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN):
 		try:
 			if tnx.prefix() in DbWallets(APP.config).wallet(tnx.bnf()).public():
@@ -253,10 +253,13 @@ def api_put_wallet(wallet_id):
 		if tnx.prefix() in wallet.public():
 			tnx.update(TransactionDstStatus.GOOD)
 	# Задачи на поиск неизвестных отправителей
-	for tnx in IncomingTransactions(wallet.transactions()):
-		if tnx.prefix() in wallet.public():
-			if not TransactionIn(tnx, DbTransactions().incoming(wallet.id())):
-				DbWanted().add(tnx.bnf(), tnx, wallet.id())
+	for txn in IncomingTransactions(wallet.transactions()):
+		if all((
+			txn.prefix() in wallet.public(),
+			not TransactionIn(txn, DbTransactions().incoming(wallet.id())),
+			not TransactionIn(txn, [w.transaction() for w in DbWanted()])
+		)):
+			DbWanted().add(txn.bnf(), txn, wallet.id())
 	# Определение доступного баланса
 	if wallet.id() == '0000000000000000':
 		limit = 0xffffffffffffffff
