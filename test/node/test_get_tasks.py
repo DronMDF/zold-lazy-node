@@ -159,6 +159,29 @@ class TestGetTasks:
 			if t['type'] == 'wanted'
 		)
 
+	def test_src_wallet_from_wanted_trivial(self):
+		''' Кошелек убирается из поиска, простой случай '''
+		src = FullWallet(RootWallet(), 3000, APP.test_client())
+		dst = FakeWallet()
+		transaction = FakeTransaction(src, dst, -777)
+		APP.test_client().put(
+			'/wallet/%s' % dst.id(),
+			data=str(TransactionWallet(
+				dst,
+				IncomingTransaction(src, transaction)
+			))
+		)
+		APP.test_client().put(
+			'/wallet/%s' % src.id(),
+			data=str(TransactionWallet(src, transaction))
+		)
+		response = APP.test_client().get('/tasks')
+		assert not any(
+			t['id'] == src.id()
+			for t in response.json['tasks']
+			if t['type'] == 'wanted'
+		)
+
 	def test_src_wallet_from_wanted(self):
 		''' В случае поступления транзакции, запись убирается из поиск '''
 		swallet = FullWallet(RootWallet(), 3000, APP.test_client())
