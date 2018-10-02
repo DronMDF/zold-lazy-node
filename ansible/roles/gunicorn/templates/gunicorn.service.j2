@@ -1,6 +1,5 @@
 [Unit]
 Description=gunicorn daemon
-Requires=gunicorn.socket
 After=network.target
 
 [Service]
@@ -9,7 +8,7 @@ User=zold
 Group=zold
 RuntimeDirectory=gunicorn
 WorkingDirectory={{project_dir}}
-ExecStart=/usr/bin/env gunicorn --access-logfile - --pythonpath {{project_dir}} --pid /run/gunicorn/pid --bind unix:/run/gunicorn/socket node.app:APP
+ExecStart=/usr/bin/env gunicorn --access-logfile - --pythonpath {{project_dir}} --pid /run/gunicorn/pid --bind 0.0.0.0:{{api_port}} node.app:APP
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true
