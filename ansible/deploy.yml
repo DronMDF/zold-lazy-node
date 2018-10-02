@@ -9,4 +9,3 @@
     - base
     - zold
     - gunicorn
-    - nginx

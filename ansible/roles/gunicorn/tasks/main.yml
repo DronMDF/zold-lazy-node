@@ -7,18 +7,10 @@
   template:
     src: gunicorn.service.j2
     dest: /etc/systemd/system/gunicorn.service
-- name: install gunicorn socket
-  copy:
-    src: gunicorn.socket
-    dest: /etc/systemd/system/
 - name: install gunicorn tmpfile
   copy:
     src: gunicorn.conf
     dest: /etc/tmpfiles.d/
-- name: create gunicorn socket directory
-  file:
-    path: /run/gunicorn
-    state: directory
 - name: Activate gunicorn
   systemd:
     name: gunicorn
@@ -30,7 +22,6 @@
 #  Причем команда service не дает того же эффекта, что странно.
 - name: Restart gunicorn
   become: yes
-  warn: False
   shell: |
     service gunicorn stop
     service gunicorn start
