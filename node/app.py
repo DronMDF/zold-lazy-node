@@ -59,6 +59,7 @@ with APP.app_context():
 def after_request(response):
 	''' Добавляем кастомный HTTP заголовок '''
 	score = MainScore(APP.config)
+	response.headers.add('Access-Control-Allow-Origin', '*')
 	response.headers.add('X-Zold-Version', APP.config['ZOLD_VERSION'])
 	# @todo #175 Для X-Zold-Score, нужен специальный XScoreString
 	response.headers.add(
