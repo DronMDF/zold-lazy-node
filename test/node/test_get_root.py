@@ -70,4 +70,4 @@ class TestGetRoot:
 		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
 		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
 		response = APP.test_client().get('/')
-		assert response.json['wallets'] > 2
+		assert response.json['wallets'] >= 2
