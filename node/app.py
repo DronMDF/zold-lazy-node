@@ -103,8 +103,7 @@ def api_root():
 		'score': ValueScore(MainScore(APP.config), APP.config).json(),
 		'threads': '1/1',
 		'version': APP.config['ZOLD_VERSION'],
-		# @todo #126 Передать реальное количество имеющихся кошельков.
-		'wallets': 1
+		'wallets': DbWallets(APP.config).count()
 	}
 	return data
 
