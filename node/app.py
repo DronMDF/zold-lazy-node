@@ -19,7 +19,7 @@ from zold.score_props import (
 	ScoreValid,
 	ScoreValue
 )
-from zold.time import AheadTime
+from zold.time import AheadTime, NowTime
 from zold.transaction import (
 	OrderedTransactions,
 	OutgoingTransactions,
@@ -220,19 +220,20 @@ def api_get_wallet(wallet_id):
 		for tnx in DbTransactions().unapproved(wallet_id):
 			if tnx.prefix() in wallet.public():
 				tnx.update(TransactionDstStatus.GOOD)
+		transactions = list(
+			OrderedTransactions(
+				itertools.chain(
+					DbTransactions().select(src_id=wallet_id),
+					DbTransactions().incoming(wallet_id)
+				)
+			)
+		)
 		return {
 			'protocol': APP.config['ZOLD_PROTOCOL'],
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': str(TransactionWallet(
-				wallet,
-				*OrderedTransactions(
-					itertools.chain(
-						DbTransactions().select(src_id=wallet_id),
-						DbTransactions().incoming(wallet_id)
-					)
-				)
-			)),
+			'body': str(TransactionWallet(wallet, *transactions)),
+			'mtime': str(transactions[-1].time() if transactions else NowTime()),
 			'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 		}
 	except RuntimeError:
