@@ -14,9 +14,10 @@ from node.db import DB, Remote
 class TestGetRoot:
 	''' Тестирование содержимого корневой страницы '''
 
-	def test_x_zold_version(self):
-		''' Заголовок должен содержать X-Zold-Version '''
+	def test_reply_header(self):
+		''' Заголовок должен содержать определенный набор полей '''
 		response = APP.test_client().get('/')
+		assert response.headers['Access-Control-Allow-Origin'] == '*'
 		assert 'X-Zold-Version' in response.headers
 
 	def test_body_contents(self):
