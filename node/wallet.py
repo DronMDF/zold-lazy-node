@@ -44,6 +44,11 @@ class DbWallets:
 	def __iter__(self):
 		return (DbWallet(w, self.config) for w in Wallet.query.all())
 
+	def count(self):
+		''' Общее количество кошельков '''
+		# Такой подсчет количества может оказаться медленным
+		return Wallet.query.count()
+
 	def wallet(self, id):
 		''' Возвращает конкретный кошелек '''
 		# @todo #146 Использовать one при конкретном запросе кошелька
