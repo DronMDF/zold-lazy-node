@@ -47,3 +47,15 @@ class TestGetWallet:
 		)
 		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert root_wallet.id() in response.json['body']
+
+	def test_wallet_mtime(self):
+		''' В отзыве сервера присутствует время последней модификации кошелька '''
+		root_wallet = RootWallet()
+		wallet = FakeWallet()
+		transaction = FakeTransaction(root_wallet, wallet, -555)
+		APP.test_client().put(
+			'/wallet/%s' % root_wallet.id(),
+			data=str(TransactionWallet(root_wallet, transaction))
+		)
+		response = APP.test_client().get('/wallet/%s' % root_wallet.id())
+		assert response.json['mtime'] == str(transaction.time())
