@@ -11,9 +11,9 @@ from flask_api import status
 from node.app import APP
 from zold.score import JsonScore
 from zold.score_props import ScoreValid
-from zold.wallet import TransactionWallet
-from zold.transaction import TransactionString
-from .test_wallet import FakeWallet, RootWallet
+from zold.wallet import StringWallet, TransactionWallet
+from zold.transaction import OutgoingTransactions, TransactionString
+from .test_wallet import FakeWallet, FullWallet, RootWallet
 
 
 class TestPutWallet:
@@ -95,3 +95,16 @@ class TestPutWallet:
 		assert str(TransactionString(transaction1)) in response.json['body']
 		# Вторая транзакция не должна проходить
 		assert str(TransactionString(transaction2)) not in response.json['body']
+
+	def test_put_wallet_many_times(self):
+		''' При многократной загрузке, кошелек должен оставаться согласованным '''
+		src = FullWallet(RootWallet(), 1000, APP.test_client())
+		dst = FakeWallet()
+		transaction = FakeTransaction(src, dst, -400)
+		wallet = TransactionWallet(src, transaction)
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		response = APP.test_client().get('/wallet/%s' % wallet.id())
+		assert len(list(OutgoingTransactions(
+			StringWallet(response.json['body']).transactions()
+		))) == 1
