@@ -8,6 +8,12 @@
 
 from node.db import DB, Transaction, TransactionDstStatus
 from zold.time import DatetimeTime
+from zold.transaction import (
+	OrderedTransactions,
+	OutgoingTransactions,
+	TransactionIn,
+	TransactionValid
+)
 
 
 class DbTransaction:
@@ -110,3 +116,31 @@ class DbTransactions:
 		''' Добавление транзакций в БД '''
 		DB.session.add(Transaction(wallet_id, transaction))
 		DB.session.commit()
+
+
+class LimitedNewTransactions:
+	'''
+	Список новых транзакций, которые проходят по балансу
+	Проверенные транзакции, присутствующие в БД исключаются
+	Из лимита изначально убирается все, что проверено.
+	Новые могу только пройти по остатку, в порядке времени
+	'''
+	def __init__(self, wallet, limit):
+		self.wallet = wallet
+		self.limit = limit
+
+	def amounted(self, new, approved):
+		''' Транзакции не входящие в approved с суммой '''
+		amount = 0
+		for tnx in OrderedTransactions(new):
+			if not TransactionIn(tnx, approved):
+				amount += abs(tnx.amount())
+				yield amount, tnx
+
+	def __iter__(self):
+		new = OutgoingTransactions(self.wallet.transactions())
+		approved = list(DbTransactions().select(src_id=self.wallet.id()))
+		newlim = self.limit - sum(-t.amount() for t in approved)
+		for amount, tnx in self.amounted(new, approved):
+			if amount < newlim and TransactionValid(tnx, self.wallet):
+				yield tnx
