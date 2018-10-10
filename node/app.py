@@ -22,18 +22,16 @@ from zold.score_props import (
 from zold.time import AheadTime, NowTime
 from zold.transaction import (
 	OrderedTransactions,
-	OutgoingTransactions,
 	IncomingTransactions,
 	TransactionsAmount,
 	TransactionIn,
 	TransactionString,
-	TransactionValid
 )
 from zold.wallet import StringWallet, TransactionWallet
 from node.db import DB, TransactionDstStatus
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore, MainScore
 from node.remote import DbRemotes, IsRemoteUpdated
-from node.transaction import DbTransactions
+from node.transaction import DbTransactions, LimitedNewTransactions
 from node.wallet import DbWallets, DbWanted
 
 
@@ -266,23 +264,15 @@ def api_put_wallet(wallet_id):
 		limit = 0xffffffffffffffff
 	else:
 		limit = int(TransactionsAmount(DbTransactions().incoming(wallet.id())))
-	# @todo #157 При рассчете баланса необходимо учитывать транзакции из БД,
-	#  они могут быть упущены в кошельке
-	for tnx in OrderedTransactions(OutgoingTransactions(wallet.transactions())):
-		if limit < abs(tnx.amount()):
-			break
-		if TransactionValid(tnx, wallet):
-			DbTransactions().add(wallet.id(), tnx)
-			limit -= abs(tnx.amount())
-
-	data = {
-		'version': APP.config['ZOLD_VERSION'],
-		'protocol': APP.config['ZOLD_PROTOCOL'],
-		'id': wallet_id,
-		'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
-	}
+	for tnx in LimitedNewTransactions(wallet, limit):
+		DbTransactions().add(wallet.id(), tnx)
 	# @todo #68 Сервер должен возвращать HTTP_ACCEPTED, в соответствии с WP.
 	#  Но текущий клиент рассчитывает, что сервер отвечает кодом HTTP_200_OK.
 	#  Достоточно сложно будет перейти с одного на другой.
 	#  Клиент должен будет поддерживать оба.
-	return data, status.HTTP_200_OK
+	return {
+		'version': APP.config['ZOLD_VERSION'],
+		'protocol': APP.config['ZOLD_PROTOCOL'],
+		'id': wallet_id,
+		'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
+	}, status.HTTP_200_OK
