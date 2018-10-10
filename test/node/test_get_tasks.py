@@ -76,10 +76,15 @@ class TestGetTasks:
 
 	def test_dst_wallet_to_wanted(self):
 		''' Кошельки получатели помещаются в список tasks '''
-		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		root = RootWallet()
+		wallet = FullWallet(root, 1000, APP.test_client())
 		response = APP.test_client().get('/tasks')
 		assert any(
-			t['id'] == wallet.id() and t['prefix'] in wallet.public()
+			all((
+				t['id'] == wallet.id(),
+				t['prefix'] in wallet.public(),
+				t.get('who', None) == root.id()
+			))
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)
@@ -117,18 +122,18 @@ class TestGetTasks:
 
 	def test_src_wallet_to_wanted(self):
 		''' Кошельки отправители помещаются в список tasks '''
-		wallet = FakeWallet()
-		dst_wallet = FakeWallet()
+		src = FakeWallet()
+		dst = FakeWallet()
 		APP.test_client().put(
-			'/wallet/%s' % dst_wallet.id(),
+			'/wallet/%s' % dst.id(),
 			data=str(TransactionWallet(
-				dst_wallet,
-				IncomingTransaction(wallet, FakeTransaction(wallet, dst_wallet, -1500))
+				dst,
+				IncomingTransaction(src, FakeTransaction(src, dst, -1500))
 			))
 		)
 		response = APP.test_client().get('/tasks')
 		assert any(
-			t['id'] == wallet.id()
+			t['id'] == src.id() and t.get('who', None) == dst.id()
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)
@@ -207,28 +212,29 @@ class TestGetTasks:
 
 	def test_src_wallet_from_wanted(self):
 		''' В случае поступления транзакции, запись убирается из поиск '''
-		swallet = FullWallet(RootWallet(), 3000, APP.test_client())
-		dwallet = FakeWallet()
-		transaction1 = FakeTransaction(swallet, dwallet, -777)
-		transaction2 = FakeTransaction(swallet, dwallet, -1500)
+		src = FullWallet(RootWallet(), 3000, APP.test_client())
+		dst = FakeWallet()
+		transaction1 = FakeTransaction(src, dst, -777)
+		transaction2 = FakeTransaction(src, dst, -1500)
 		APP.test_client().put(
-			'/wallet/%s' % dwallet.id(),
+			'/wallet/%s' % dst.id(),
 			data=str(TransactionWallet(
-				dwallet,
-				IncomingTransaction(swallet, transaction1),
-				IncomingTransaction(swallet, transaction2),
+				dst,
+				IncomingTransaction(src, transaction1),
+				IncomingTransaction(src, transaction2),
 			))
 		)
 		APP.test_client().put(
-			'/wallet/%s' % swallet.id(),
-			data=str(TransactionWallet(swallet, transaction2))
+			'/wallet/%s' % src.id(),
+			data=str(TransactionWallet(src, transaction2))
 		)
 		response = APP.test_client().get('/tasks')
 		assert any(
 			all((
-				t['id'] == swallet.id(),
+				t['id'] == src.id(),
+				t.get('who', None) == dst.id(),
 				t['transaction'] == str(
-					TransactionString(IncomingTransaction(swallet, transaction1))
+					TransactionString(IncomingTransaction(src, transaction1))
 				)
 			))
 			for t in response.json['tasks']
@@ -236,9 +242,9 @@ class TestGetTasks:
 		)
 		assert not any(
 			all((
-				t['id'] == swallet.id(),
+				t['id'] == src.id(),
 				t['transaction'] == str(
-					TransactionString(IncomingTransaction(swallet, transaction2))
+					TransactionString(IncomingTransaction(src, transaction2))
 				)
 			))
 			for t in response.json['tasks']

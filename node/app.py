@@ -159,7 +159,8 @@ def api_tasks():
 					'id': t.bnf(),
 					'prefix': t.prefix(),
 					'transaction': str(TransactionString(t)),
-					'reason': 'dst unknown'
+					'reason': 'dst unknown',
+					'who': t.src()
 				}
 				for t in DbTransactions().select(dst_status=TransactionDstStatus.UNKNOWN)
 			],
@@ -168,7 +169,8 @@ def api_tasks():
 					'type': 'wanted',
 					'id': w.id(),
 					'transaction': str(TransactionString(w.transaction())),
-					'reason': 'wanted'
+					'reason': 'wanted',
+					'who': w.who()
 				}
 				for w in DbWanted()
 			]
