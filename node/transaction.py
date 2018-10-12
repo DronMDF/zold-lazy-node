@@ -42,7 +42,7 @@ class DbTransaction:
 		return self.transaction.dst_prefix
 
 	def bnf(self):
-		''' соучастник '''
+		''' получатель платежа '''
 		return self.transaction.dst_id
 
 	def details(self):
@@ -52,6 +52,10 @@ class DbTransaction:
 	def signature(self):
 		''' сигнатура '''
 		return self.transaction.signature
+
+	def src(self):
+		''' Отправитель платежа, дополнительное API '''
+		return self.transaction.src_id
 
 	def update(self, status):
 		''' Обновление состояния транзакции '''
