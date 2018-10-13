@@ -219,6 +219,7 @@ def api_get_wallet(wallet_id):
 		for tnx in DbTransactions().unapproved(wallet_id):
 			if tnx.prefix() in wallet.public():
 				tnx.update(TransactionDstStatus.GOOD)
+		# @todo #215 Список транзакций должен формироваться в DbWallet
 		transactions = list(
 			OrderedTransactions(
 				itertools.chain(
@@ -253,12 +254,15 @@ def api_put_wallet(wallet_id):
 	for tnx in DbTransactions().unapproved(wallet_id):
 		if tnx.prefix() in wallet.public():
 			tnx.update(TransactionDstStatus.GOOD)
+	# Все Wanted для данного кошелька стираются
+	for wanted in (w for w in DbWanted() if w.id() == wallet.id()):
+		wanted.remove()
 	# Задачи на поиск неизвестных отправителей
 	for txn in IncomingTransactions(wallet.transactions()):
 		if all((
 			txn.prefix() in wallet.public(),
 			not TransactionIn(txn, DbTransactions().incoming(wallet.id())),
-			not TransactionIn(txn, [w.transaction() for w in DbWanted()])
+			txn.bnf() not in [w.id() for w in DbWanted()]
 		)):
 			DbWanted().add(txn.bnf(), txn, wallet.id())
 	# Определение доступного баланса
