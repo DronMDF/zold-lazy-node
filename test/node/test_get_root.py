@@ -7,9 +7,10 @@
 ''' Тестирование корневого урла '''
 
 from test.zold.test_score import FakeScore
+from test.zold.wallet import RootWallet
 from node.app import APP
 from node.db import DB, Remote
-from .test_wallet import RootWallet, FullWallet
+from .test_wallet import FullWallet
 
 
 class TestGetRoot:
