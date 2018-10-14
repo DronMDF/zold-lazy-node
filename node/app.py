@@ -27,7 +27,7 @@ from zold.transaction import (
 	TransactionIn,
 	TransactionString,
 )
-from zold.wallet import StringWallet, TransactionWallet
+from zold.wallet import StringWallet, TransactionWallet, WalletString
 from node.db import DB, TransactionDstStatus
 from node.score import AtLeastOneDbScores, DbScores, DbSavedScore, MainScore
 from node.remote import DbRemotes, IsRemoteUpdated
@@ -231,7 +231,7 @@ def api_get_wallet(wallet_id):
 			'protocol': APP.config['ZOLD_PROTOCOL'],
 			'version': APP.config['ZOLD_VERSION'],
 			'id': wallet_id,
-			'body': str(TransactionWallet(wallet, *transactions)),
+			'body': str(WalletString(TransactionWallet(wallet, *transactions))),
 			'mtime': str(transactions[-1].time() if transactions else NowTime()),
 			'score': ScoreJson(MainScore(APP.config), APP.config['STRENGTH']).json()
 		}

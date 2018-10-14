@@ -8,7 +8,7 @@
 
 from test.zold.test_transaction import FakeTransaction
 from test.zold.wallet import FakeWallet
-from zold.wallet import TransactionWallet
+from zold.wallet import TransactionWallet, WalletString
 
 
 class FullWallet:
@@ -21,14 +21,15 @@ class FullWallet:
 		self.wallet = FakeWallet()
 		client.put(
 			'/wallet/%s' % sponsor.id(),
-			data=str(TransactionWallet(
-				sponsor,
-				FakeTransaction(sponsor, self.wallet, -amount)
-			))
+			data=str(
+				WalletString(
+					TransactionWallet(
+						sponsor,
+						FakeTransaction(sponsor, self.wallet, -amount)
+					)
+				)
+			)
 		)
 
 	def __getattr__(self, attr):
 		return getattr(self.wallet, attr)
-
-	def __str__(self):
-		return str(self.wallet)
