@@ -8,12 +8,13 @@
 
 from test.zold.test_score import FakeScore
 from test.zold.test_transaction import BadPrefixTransaction, FakeTransaction
+from test.zold.wallet import FakeWallet, RootWallet
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
 from zold.wallet import TransactionWallet
 from zold.transaction import TransactionString
-from .test_wallet import FakeWallet, RootWallet, FullWallet
+from .test_wallet import FullWallet
 from .test_transaction import IncomingTransaction
 
 

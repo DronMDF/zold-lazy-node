@@ -7,10 +7,11 @@
 ''' Тестирование Работы с кошельками '''
 
 from test.zold.test_transaction import FakeTransaction
+from test.zold.wallet import FakeWallet, RootWallet
 from flask_api import status
 from node.app import APP
 from zold.wallet import TransactionWallet
-from .test_wallet import FakeWallet, FullWallet, RootWallet
+from .test_wallet import FullWallet
 
 
 class TestGetWallet:
