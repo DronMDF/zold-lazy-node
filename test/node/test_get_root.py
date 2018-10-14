@@ -10,6 +10,7 @@ from test.zold.test_score import FakeScore
 from test.zold.wallet import RootWallet
 from node.app import APP
 from node.db import DB, Remote
+from zold.wallet import WalletString
 from .test_wallet import FullWallet
 
 
@@ -68,7 +69,10 @@ class TestGetRoot:
 
 	def test_wallet_count(self):
 		''' Количество кошельков меняется, как минимум не равно 1 '''
-		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		wallet = FullWallet(RootWallet(), 666, APP.test_client())
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		response = APP.test_client().get('/')
 		assert response.json['wallets'] >= 2
