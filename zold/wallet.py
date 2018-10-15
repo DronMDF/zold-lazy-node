@@ -38,17 +38,32 @@ class TransactionWallet:
 	''' Декоратор для кошелька - добавляет транзакции '''
 	def __init__(self, wallet, *transactions):
 		self.wallet = wallet
-		self.transactions = transactions
-		for tnx in transactions:
+		self.tnxs = transactions
+		for tnx in self.tnxs:
 			if tnx.amount() < 0 and not TransactionValid(tnx, wallet):
 				raise RuntimeError("Некорректная подпись транзакции")
 
-	def id(self):
-		''' Идентификатор кошелька '''
-		return self.wallet.id()
+	def transactions(self):
+		''' Список транзакций '''
+		# @todo #218 TransactionWallet должен объединять транзакции кошелька
+		#  и транзакции заданные явно
+		return self.tnxs
+
+	def __getattr__(self, name):
+		return getattr(self.wallet, name)
+
+
+class WalletString:
+	''' Строковое представление кошелька '''
+	def __init__(self, wallet):
+		self.wallet = wallet
 
 	def __str__(self):
 		return '\n'.join((
-			str(self.wallet),
-			*[str(TransactionString(t)) for t in self.transactions]
+			self.wallet.network(),
+			'2',
+			self.wallet.id(),
+			self.wallet.public(),
+			'',
+			*[str(TransactionString(t)) for t in self.wallet.transactions()]
 		))

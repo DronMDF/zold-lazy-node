@@ -10,7 +10,7 @@ from test.zold.test_transaction import FakeTransaction
 from test.zold.wallet import FakeWallet, RootWallet
 from flask_api import status
 from node.app import APP
-from zold.wallet import TransactionWallet
+from zold.wallet import TransactionWallet, WalletString
 from .test_wallet import FullWallet
 
 
@@ -24,7 +24,10 @@ class TestGetWallet:
 	def test_wallet_ok(self):
 		''' Сервер возвращает содержимое кошелька '''
 		wallet = FakeWallet()
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert response.status_code == status.HTTP_200_OK
 
@@ -32,7 +35,10 @@ class TestGetWallet:
 		''' Идентификатор корневого должен фигурировать в транзакции получателя '''
 		root_wallet = RootWallet()
 		wallet = FullWallet(root_wallet, 1000, APP.test_client())
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert root_wallet.id() in response.json['body']
 
@@ -41,10 +47,13 @@ class TestGetWallet:
 		root_wallet = RootWallet()
 		wallet = FakeWallet()
 		transaction = FakeTransaction(root_wallet, wallet, -777)
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		APP.test_client().put(
 			'/wallet/%s' % root_wallet.id(),
-			data=str(TransactionWallet(root_wallet, transaction))
+			data=str(WalletString(TransactionWallet(root_wallet, transaction)))
 		)
 		response = APP.test_client().get('/wallet/%s' % wallet.id())
 		assert root_wallet.id() in response.json['body']
@@ -56,7 +65,7 @@ class TestGetWallet:
 		transaction = FakeTransaction(root_wallet, wallet, -555)
 		APP.test_client().put(
 			'/wallet/%s' % root_wallet.id(),
-			data=str(TransactionWallet(root_wallet, transaction))
+			data=str(WalletString(TransactionWallet(root_wallet, transaction)))
 		)
 		response = APP.test_client().get('/wallet/%s' % root_wallet.id())
 		assert response.json['mtime'] == str(transaction.time())

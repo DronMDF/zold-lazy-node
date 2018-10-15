@@ -12,7 +12,7 @@ from test.zold.wallet import FakeWallet, RootWallet
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
-from zold.wallet import TransactionWallet
+from zold.wallet import TransactionWallet, WalletString
 from zold.transaction import TransactionString
 from .test_wallet import FullWallet
 from .test_transaction import IncomingTransaction
@@ -66,7 +66,10 @@ class TestGetTasks:
 			'/',
 			headers={'X-Zold-Score': '3/3: %s' % WalletScore(wallet)}
 		)
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		response = APP.test_client().get('/tasks')
 		assert response.status_code == status.HTTP_200_OK
 		assert not any(
@@ -93,7 +96,10 @@ class TestGetTasks:
 	def test_dst_wallet_from_wanted(self):
 		''' Кошельки получатели удаляются из списка tasks '''
 		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
-		APP.test_client().put('/wallet/%s' % wallet.id(), data=str(wallet))
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(wallet))
+		)
 		response = APP.test_client().get('/tasks')
 		assert not any(
 			t['id'] == wallet.id()
@@ -111,9 +117,9 @@ class TestGetTasks:
 		transaction = BadPrefixTransaction(src, dst, -100)
 		APP.test_client().put(
 			'/wallet/%s' % src.id(),
-			data=str(TransactionWallet(src, transaction))
+			data=str(WalletString(TransactionWallet(src, transaction)))
 		)
-		APP.test_client().put('/wallet/%s' % dst.id(), data=str(dst))
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(WalletString(dst)))
 		response = APP.test_client().get('/tasks')
 		assert not any(
 			t['id'] in [src.id(), dst.id()]
@@ -127,10 +133,14 @@ class TestGetTasks:
 		dst = FakeWallet()
 		APP.test_client().put(
 			'/wallet/%s' % dst.id(),
-			data=str(TransactionWallet(
-				dst,
-				IncomingTransaction(src, FakeTransaction(src, dst, -1500))
-			))
+			data=str(
+				WalletString(
+					TransactionWallet(
+						dst,
+						IncomingTransaction(src, FakeTransaction(src, dst, -1500))
+					)
+				)
+			)
 		)
 		response = APP.test_client().get('/tasks')
 		assert any(
@@ -149,11 +159,15 @@ class TestGetTasks:
 		transaction = FakeTransaction(src, dst, -777)
 		APP.test_client().put(
 			'/wallet/%s' % dst.id(),
-			data=str(TransactionWallet(dst, IncomingTransaction(src, transaction)))
+			data=str(WalletString(
+				TransactionWallet(dst, IncomingTransaction(src, transaction))
+			))
 		)
 		APP.test_client().put(
 			'/wallet/%s' % dst.id(),
-			data=str(TransactionWallet(dst, IncomingTransaction(src, transaction)))
+			data=str(WalletString(
+				TransactionWallet(dst, IncomingTransaction(src, transaction))
+			))
 		)
 		response = APP.test_client().get('/tasks')
 		assert len([
@@ -171,15 +185,15 @@ class TestGetTasks:
 		transaction = FakeTransaction(wallet, dst_wallet, -1500)
 		APP.test_client().put(
 			'/wallet/%s' % src_wallet.id(),
-			data=str(TransactionWallet(src_wallet, src_transaction))
+			data=str(WalletString(TransactionWallet(src_wallet, src_transaction)))
 		)
 		APP.test_client().put(
 			'/wallet/%s' % dst_wallet.id(),
-			data=str(TransactionWallet(
+			data=str(WalletString(TransactionWallet(
 				dst_wallet,
 				IncomingTransaction(src_wallet, src_transaction),
 				IncomingTransaction(wallet, transaction),
-			))
+			)))
 		)
 		response = APP.test_client().get('/tasks')
 		assert not any(
@@ -195,14 +209,14 @@ class TestGetTasks:
 		transaction = FakeTransaction(src, dst, -777)
 		APP.test_client().put(
 			'/wallet/%s' % dst.id(),
-			data=str(TransactionWallet(
+			data=str(WalletString(TransactionWallet(
 				dst,
 				IncomingTransaction(src, transaction)
-			))
+			)))
 		)
 		APP.test_client().put(
 			'/wallet/%s' % src.id(),
-			data=str(TransactionWallet(src, transaction))
+			data=str(WalletString(TransactionWallet(src, transaction)))
 		)
 		response = APP.test_client().get('/tasks')
 		assert not any(
@@ -219,15 +233,15 @@ class TestGetTasks:
 		transaction2 = FakeTransaction(src, dst, -1500)
 		APP.test_client().put(
 			'/wallet/%s' % dst.id(),
-			data=str(TransactionWallet(
+			data=str(WalletString(TransactionWallet(
 				dst,
 				IncomingTransaction(src, transaction1),
 				IncomingTransaction(src, transaction2),
-			))
+			)))
 		)
 		APP.test_client().put(
 			'/wallet/%s' % src.id(),
-			data=str(TransactionWallet(src, transaction2))
+			data=str(WalletString(TransactionWallet(src, transaction2)))
 		)
 		response = APP.test_client().get('/tasks')
 		assert any(

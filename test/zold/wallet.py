@@ -20,6 +20,10 @@ class TestWallet:
 		self.wallet_id = wallet_id
 		self.key = key
 
+	def network(self):
+		''' Сеть '''
+		return 'test'
+
 	def id(self):
 		''' Идентификатор кошелька '''
 		return '%016x' % self.wallet_id
@@ -49,9 +53,6 @@ class TestWallet:
 			PKCS1_v1_5.new(self.key).sign(SHA256.new(data.encode('ascii')))
 		)
 
-	def __str__(self):
-		return '\n'.join(('test', '2', self.id(), self.public(), ''))
-
 
 class FakeWallet:
 	''' Случайный кошелек для тестирования '''
@@ -63,9 +64,6 @@ class FakeWallet:
 
 	def __getattr__(self, name):
 		return getattr(self.wallet, name)
-
-	def __str__(self):
-		return str(self.wallet)
 
 
 class RootWallet:
@@ -97,6 +95,3 @@ class RootWallet:
 
 	def __getattr__(self, name):
 		return getattr(self.wallet, name)
-
-	def __str__(self):
-		return str(self.wallet)

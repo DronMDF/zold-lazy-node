@@ -16,6 +16,10 @@ class DbWallet:
 		self.wallet = wallet
 		self.config = config
 
+	def network(self):
+		''' Название сети '''
+		return self.wallet.network
+
 	def id(self):
 		''' Идентификатор кошелька '''
 		return self.wallet.wallet_id
@@ -24,16 +28,10 @@ class DbWallet:
 		''' Публичный ключ '''
 		return self.wallet.public
 
-	def __str__(self):
-		''' Заголовок кошелька '''
-		# @todo #??? Формирование строки должно делаться отдельно от кошелька
-		return '\n'.join((
-			self.wallet.network,
-			self.config['ZOLD_PROTOCOL'],
-			self.wallet.wallet_id,
-			self.wallet.public,
-			''
-		))
+	def transactions(self):
+		''' Список транзакций '''
+		# @todo #218: Прочитать список транзакций из БД
+		return []
 
 
 class DbWallets:
