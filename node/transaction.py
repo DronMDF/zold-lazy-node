@@ -137,7 +137,7 @@ class LimitedNewTransactions:
 		''' Транзакции не входящие в approved с суммой '''
 		amount = 0
 		for tnx in OrderedTransactions(new):
-			if not TransactionIn(tnx, approved):
+			if next(DbTransactions().select(signature=tnx.signature()), None) is None:
 				amount += abs(tnx.amount())
 				yield amount, tnx
 
