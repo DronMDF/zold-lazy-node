@@ -9,6 +9,8 @@
 import base64
 import random
 import re
+from test.zold.test_transaction import FakeTransaction
+from test.zold.transaction import IncomingTransaction
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
@@ -92,6 +94,27 @@ class RootWallet:
 				'-----END RSA PRIVATE KEY-----'
 			)))
 		)
+
+	def __getattr__(self, name):
+		return getattr(self.wallet, name)
+
+
+class IncomeWallet:
+	''' Кошелек-получатель с одной транзакцией от источника '''
+	def __init__(self, src, amount):
+		assert amount > 0
+		self.wallet = FakeWallet()
+		self.src = src
+		self.amount = amount
+
+	def transactions(self):
+		''' Список транзакций '''
+		return [
+			IncomingTransaction(
+				self.src,
+				FakeTransaction(self.src, self.wallet, -self.amount)
+			)
+		]
 
 	def __getattr__(self, name):
 		return getattr(self.wallet, name)

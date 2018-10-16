@@ -8,14 +8,13 @@
 
 from test.zold.test_score import FakeScore
 from test.zold.test_transaction import BadPrefixTransaction, FakeTransaction
-from test.zold.wallet import FakeWallet, RootWallet
+from test.zold.transaction import IncomingTransaction
+from test.zold.wallet import FakeWallet, RootWallet, IncomeWallet
 from flask_api import status
 from node.app import APP
 from node.db import DB, Score
 from zold.wallet import TransactionWallet, WalletString
-from zold.transaction import TransactionString
 from .test_wallet import FullWallet
-from .test_transaction import IncomingTransaction
 
 
 class WalletScore:
@@ -130,18 +129,8 @@ class TestGetTasks:
 	def test_src_wallet_to_wanted(self):
 		''' Кошельки отправители помещаются в список tasks '''
 		src = FakeWallet()
-		dst = FakeWallet()
-		APP.test_client().put(
-			'/wallet/%s' % dst.id(),
-			data=str(
-				WalletString(
-					TransactionWallet(
-						dst,
-						IncomingTransaction(src, FakeTransaction(src, dst, -1500))
-					)
-				)
-			)
-		)
+		dst = IncomeWallet(src, 1500)
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(WalletString(dst)))
 		response = APP.test_client().get('/tasks')
 		assert any(
 			t['id'] == src.id() and t.get('who', None) == dst.id()
@@ -155,20 +144,26 @@ class TestGetTasks:
 		только один раз
 		'''
 		src = FakeWallet()
-		dst = FakeWallet()
-		transaction = FakeTransaction(src, dst, -777)
-		APP.test_client().put(
-			'/wallet/%s' % dst.id(),
-			data=str(WalletString(
-				TransactionWallet(dst, IncomingTransaction(src, transaction))
-			))
-		)
-		APP.test_client().put(
-			'/wallet/%s' % dst.id(),
-			data=str(WalletString(
-				TransactionWallet(dst, IncomingTransaction(src, transaction))
-			))
-		)
+		dst = IncomeWallet(src, 777)
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(WalletString(dst)))
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(WalletString(dst)))
+		response = APP.test_client().get('/tasks')
+		assert len([
+			t
+			for t in response.json['tasks']
+			if t['type'] == 'wanted' and t['id'] == src.id()
+		]) == 1
+
+	def test_src_wallet_to_wanted_alone(self):
+		'''
+		Ищем кошелек только один раз, не зависимо от того,
+		для каких еще кошельков он нужен
+		'''
+		src = FakeWallet()
+		dst1 = IncomeWallet(src, 1500)
+		APP.test_client().put('/wallet/%s' % dst1.id(), data=str(WalletString(dst1)))
+		dst2 = IncomeWallet(src, 100)
+		APP.test_client().put('/wallet/%s' % dst2.id(), data=str(WalletString(dst2)))
 		response = APP.test_client().get('/tasks')
 		assert len([
 			t
@@ -225,43 +220,18 @@ class TestGetTasks:
 			if t['type'] == 'wanted'
 		)
 
-	def test_src_wallet_from_wanted(self):
-		''' В случае поступления транзакции, запись убирается из поиск '''
-		src = FullWallet(RootWallet(), 3000, APP.test_client())
-		dst = FakeWallet()
-		transaction1 = FakeTransaction(src, dst, -777)
-		transaction2 = FakeTransaction(src, dst, -1500)
-		APP.test_client().put(
-			'/wallet/%s' % dst.id(),
-			data=str(WalletString(TransactionWallet(
-				dst,
-				IncomingTransaction(src, transaction1),
-				IncomingTransaction(src, transaction2),
-			)))
-		)
-		APP.test_client().put(
-			'/wallet/%s' % src.id(),
-			data=str(WalletString(TransactionWallet(src, transaction2)))
-		)
+	def test_src_wallet_from_wanted_anyway(self):
+		'''
+		В случае загрузки кошелька он удаляется из поиска,
+		даже если искомых транзакций там нет.
+		'''
+		src = FakeWallet()
+		dst = IncomeWallet(src, 555)
+		APP.test_client().put('/wallet/%s' % dst.id(), data=str(WalletString(dst)))
+		APP.test_client().put('/wallet/%s' % src.id(), data=str(WalletString(src)))
 		response = APP.test_client().get('/tasks')
-		assert any(
-			all((
-				t['id'] == src.id(),
-				t.get('who', None) == dst.id(),
-				t['transaction'] == str(
-					TransactionString(IncomingTransaction(src, transaction1))
-				)
-			))
-			for t in response.json['tasks']
-			if t['type'] == 'wanted'
-		)
 		assert not any(
-			all((
-				t['id'] == src.id(),
-				t['transaction'] == str(
-					TransactionString(IncomingTransaction(src, transaction2))
-				)
-			))
+			t['id'] == src.id()
 			for t in response.json['tasks']
 			if t['type'] == 'wanted'
 		)
