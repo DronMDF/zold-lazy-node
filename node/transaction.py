@@ -11,7 +11,7 @@ from zold.time import DatetimeTime
 from zold.transaction import (
 	OrderedTransactions,
 	OutgoingTransactions,
-	TransactionIn,
+	TransactionsAmount,
 	TransactionValid
 )
 
@@ -133,7 +133,7 @@ class LimitedNewTransactions:
 		self.wallet = wallet
 		self.limit = limit
 
-	def amounted(self, new, approved):
+	def amounted(self, new):
 		''' Транзакции не входящие в approved с суммой '''
 		amount = 0
 		for tnx in OrderedTransactions(new):
@@ -143,8 +143,9 @@ class LimitedNewTransactions:
 
 	def __iter__(self):
 		new = OutgoingTransactions(self.wallet.transactions())
-		approved = list(DbTransactions().select(src_id=self.wallet.id()))
-		newlim = self.limit - sum(-t.amount() for t in approved)
-		for amount, tnx in self.amounted(new, approved):
+		newlim = self.limit - int(TransactionsAmount(
+			DbTransactions().select(src_id=self.wallet.id())
+		))
+		for amount, tnx in self.amounted(new):
 			if amount < newlim and TransactionValid(tnx, self.wallet):
 				yield tnx
