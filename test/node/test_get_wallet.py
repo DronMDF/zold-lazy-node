@@ -69,3 +69,15 @@ class TestGetWallet:
 		)
 		response = APP.test_client().get('/wallet/%s' % root_wallet.id())
 		assert response.json['mtime'] == str(transaction.time())
+
+	def test_wallet_balance(self):
+		''' Запрос баланса по кошельку '''
+		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(
+				TransactionWallet(wallet, FakeTransaction(wallet, FakeWallet(), -250))
+			))
+		)
+		response = APP.test_client().get('/wallet/%s/balance' % wallet.id())
+		assert response.data == b'750'
