@@ -258,6 +258,8 @@ def api_put_wallet(wallet_id):
 	# @todo #7 Необходимо проверять содержимое запроса и
 	#  сверять с содержимым кошелька.
 	wallet = StringWallet(request.get_data().decode('utf8'))
+	if wallet.id() != wallet_id:
+		return {}, status.HTTP_400_BAD_REQUEST
 	try:
 		DbWallets(APP.config).wallet(wallet.id())
 	except RuntimeError:
