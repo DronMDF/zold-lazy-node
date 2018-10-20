@@ -147,5 +147,5 @@ class LimitedNewTransactions:
 			DbTransactions().select(src_id=self.wallet.id())
 		))
 		for amount, tnx in self.amounted(new):
-			if amount < newlim and TransactionValid(tnx, self.wallet):
+			if amount <= newlim and TransactionValid(tnx, self.wallet):
 				yield tnx
