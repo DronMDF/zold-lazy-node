@@ -105,3 +105,12 @@ class TestPutWallet:
 		assert len(list(OutgoingTransactions(
 			StringWallet(response.json['body']).transactions()
 		))) == 1
+
+	def test_full_payout(self):
+		''' Cписание с кошелька последних средств '''
+		wallet = FullWallet(RootWallet(), 1000, APP.test_client())
+		self.put_wallet(
+			TransactionWallet(wallet, FakeTransaction(wallet, FakeWallet(), -1000))
+		)
+		response = APP.test_client().get('/wallet/%s/balance' % wallet.id())
+		assert response.data == b'0'
