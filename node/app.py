@@ -240,6 +240,18 @@ def api_get_wallet(wallet_id):
 		return {}, 404
 
 
+@APP.route('/wallet/<wallet_id>/balance', methods=['GET'])
+def api_get_wallet_balance(wallet_id):
+	''' Баланс кошелька '''
+	transactions = list(itertools.chain(
+		DbTransactions().select(src_id=wallet_id),
+		DbTransactions().incoming(wallet_id)
+	))
+	if transactions:
+		return str(int(TransactionsAmount(transactions)))
+	return {}, 404
+
+
 @APP.route('/wallet/<wallet_id>', methods=['PUT'])
 def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
