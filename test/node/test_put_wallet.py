@@ -38,6 +38,27 @@ class TestPutWallet:
 		response = self.put_wallet(wallet)
 		assert response.status_code == status.HTTP_200_OK
 
+	def test_wrong_request(self):
+		''' Зaгрузка другого кошелька - это ошибка 400 '''
+		wallet = FakeWallet()
+		self.put_wallet(wallet)
+		response = APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(FakeWallet()))
+		)
+		assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+	def test_wrong_key(self):
+		''' Зaгрузка кошелька с другим ключем - это ошибка 400 '''
+		wallet = FakeWallet()
+		self.put_wallet(wallet)
+		fake = FakeWallet()
+		response = APP.test_client().put(
+			'/wallet/%s' % wallet.id(),
+			data=str(WalletString(fake)).replace(fake.id(), wallet.id())
+		)
+		assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 	def test_put_root_wallet_import_all_valid(self):
 		'''
 		Загрузка корневого кошелька

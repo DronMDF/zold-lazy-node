@@ -255,11 +255,13 @@ def api_get_wallet_balance(wallet_id):
 @APP.route('/wallet/<wallet_id>', methods=['PUT'])
 def api_put_wallet(wallet_id):
 	''' Обновление содержимого кошелька '''
-	# @todo #7 Необходимо проверять содержимое запроса и
-	#  сверять с содержимым кошелька.
 	wallet = StringWallet(request.get_data().decode('utf8'))
+	if wallet.id() != wallet_id:
+		return {}, status.HTTP_400_BAD_REQUEST
 	try:
-		DbWallets(APP.config).wallet(wallet.id())
+		dbwallet = DbWallets(APP.config).wallet(wallet.id())
+		if dbwallet.public() != wallet.public():
+			return {}, status.HTTP_400_BAD_REQUEST
 	except RuntimeError:
 		DbWallets(APP.config).add(wallet)
 	# Проверка непроверенных входящих транзакций
