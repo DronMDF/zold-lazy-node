@@ -42,24 +42,44 @@ class XZoldRequestScore:
 		)
 
 
-class NRemotes:
-	'''
-	Количество активных узлов, определяется методом опроса и
-	обновления информации на сервере
-	'''
-	def __init__(self, argv):
-		self.argv = argv
+class Remote:
+	''' Информация об одном стороннем узле '''
+	def __init__(self, host):
+		self.host_ = host
 
-	def __int__(self):
-		# @todo #107 Функция слишком длинная, необходима реорганизация
-		url = 'http://%s:%s' % tuple(self.argv)
+	def host(self):
+		''' Адрес:порт стороннего узла '''
+		# @todo #121 Remote.host - это чистый геттер
+		#  из за этого возникают проблемы с именованием аттрибутов класса
+		#  Можно сделать RemoteXScoreString - и проблема с хостом уйдет
+		return self.host_
+
+	def xscore(self):
+		''' xscore стороннего узла '''
+		reply = requests.get('http://%s' % self.host_, timeout=30)
+		if reply.status_code != 200:
+			raise RuntimeError("Ошибка получения xscore от узла")
+		return reply.headers.get('X-Zold-Score', '')
+
+
+class Remotes:
+	''' Проверенный список сторонних узлов '''
+	def __init__(self, host, port):
+		self.host = host
+		self.port = port
+
+	def __iter__(self):
+		# @todo #121 Remotes.__iter__ слишком сложна, необходима реорганизация
+		url = 'http://%s:%u' % (self.host, self.port)
 		reply = requests.get(url)
 		if reply.status_code != 200:
 			raise RuntimeError("Ошибка получения информации")
 		score = JsonScore(reply.json()['score'])
 		config = {'STRENGTH': score.json()['strength']}
 
-		todo = {'b2.zold.io:4096'}
+		# @todo #121 В список узлов попадает наш собственный узел
+		#  Это немного не то, что нам нужно, его стоит игнорировать
+		todo = {'b1.zold.io:80'}
 		done = set()
 		while todo:
 			host = random.choice(list(todo))
@@ -80,14 +100,11 @@ class NRemotes:
 				print(host, "Failed:", err)
 				continue
 			rscore = XZoldScore(rremote.headers.get('X-Zold-Score', ''))
-			if ScoreValid(rscore, config) and int(ScoreValue(rscore, config)) >= 3:
-				print(host, "Good host, update and get remotes...")
-				reply = requests.get(
-					url,
-					headers={'X-Zold-Score': rremote.headers['X-Zold-Score']}
-				)
-				if reply.status_code != 200:
-					print(reply)
+			if ScoreValid(rscore, config):
+				if int(ScoreValue(rscore, config)) >= 3:
+					# Добавляем только то. Что имеет пристойный уровень
+					yield Remote(host)
+				# Но списки узлов стягиваем отовсюду
 				for remote in rremote.json()['all']:
 					rhost = '%s:%u' % (remote['host'], remote['port'])
 					if rhost not in done:
@@ -95,16 +112,17 @@ class NRemotes:
 							todo.add(rhost)
 							print(host, "New remote: ", rhost)
 
-			else:
-				print(host, "Low Score")
-		return len(done)
-
 
 class ScenarioUpdate:
 	''' Сценарий обновления списка нод '''
 	def run(self, args):
 		''' Основная процедура сценария '''
-		return int(NRemotes(args))
+		for remote in Remotes(args[0], int(args[1])):
+			requests.get(
+				'http://%s:%s' % tuple(args),
+				headers={'X-Zold-Score': remote.xscore()}
+			)
+			print(remote.host(), "Updated remote")
 
 
 class ScenarioMining:
@@ -128,6 +146,8 @@ class ScenarioMining:
 
 	def run(self, args):
 		''' Основная процедура сценария '''
+		# @todo #121 Метод ScenarioMining.run слишком сложен,
+		#  необходима реорганизация
 		url = 'http://%s:%s' % tuple(args)
 
 		while True:
